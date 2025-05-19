@@ -1,0 +1,90 @@
+.gallery-screen {
+  width: 100vw;
+  min-height: 100vh;
+  background-color: rgb(219, 213, 213);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  box-sizing: border-box;
+  justify-items: center;
+}
+
+/* Novo botão de gerar QRCode */
+.generate-qr-btn {
+  grid-column: 1 / -1;
+  margin-bottom: 16px;
+  padding: 10px 24px;
+  font-size: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #1e90ff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.generate-qr-btn:disabled {
+  background-color: #777;
+  cursor: not-allowed;
+}
+
+.image-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-item {
+  width: 100%;
+  max-width: 180px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  object-fit: cover;
+}
+
+.image-item:hover {
+  transform: scale(1.05);
+}
+
+.image-label {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Novo checkbox de seleção */
+.select-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  transform: scale(1.2);
+  z-index: 1;
+}
+
+/* Filtros */
+.filter-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.filter-buttons button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #444;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.filter-buttons button.active {
+  background-color: #1e90ff;
+}
