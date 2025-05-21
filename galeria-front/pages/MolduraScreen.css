@@ -61,3 +61,19 @@ button.confirmar {
 button.confirmar:hover {
   background-color: #388e3c;
 }
+
+
+.gear-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  z-index: 10;
+  transition: transform 0.2s ease;
+}
+
+.gear-icon:hover {
+  transform: rotate(30deg);
+}

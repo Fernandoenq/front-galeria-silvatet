@@ -1,8 +1,7 @@
-const API_URL = "http://localhost:8000"; // Altere para seu domínio em produção
+const API_URL = "http://localhost:8000"; // Em produção, troque para seu domínio
 
 /**
  * Busca todas as imagens da galeria.
- * Retorna: [{ nome: string, url: string }]
  */
 export async function fetchImages(): Promise<
   {
@@ -18,29 +17,27 @@ export async function fetchImages(): Promise<
 
     const data = await response.json();
 
-    // Garantir estrutura esperada
     if (!data.images || !Array.isArray(data.images)) {
       throw new Error("Resposta da API não contém 'images'.");
     }
 
     return data.images;
   } catch (error) {
-    console.error("Erro ao buscar imagens:", error);
+    console.error("❌ Erro ao buscar imagens:", error);
     return [];
   }
 }
 
 /**
- * Gera o link de download direto para uma imagem individual.
- * OBS: necessário implementar /download/{filename} no backend.
+ * Gera link de download para uma imagem individual.
+ * (OBS: /download/{filename} precisa estar implementado no backend)
  */
 export function getDownloadLink(filename: string): string {
   return `${API_URL}/download/${encodeURIComponent(filename)}`;
 }
 
 /**
- * Requisita o download de múltiplas imagens como arquivo ZIP.
- * A API espera um JSON: { "filenames": ["img1.jpg", "img2.jpg"] }
+ * Gera um ZIP com múltiplas imagens selecionadas.
  */
 export async function fetchZipDownloadUrl(fileNames: string[]): Promise<string | null> {
   try {
@@ -49,17 +46,19 @@ export async function fetchZipDownloadUrl(fileNames: string[]): Promise<string |
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ filenames: fileNames }),
+      body: JSON.stringify({
+        filenames: fileNames, // Isso precisa ser exatamente igual ao modelo `FileList` do backend
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`Erro na requisição do ZIP: ${response.statusText}`);
+      throw new Error(`Erro ao baixar ZIP: ${response.statusText}`);
     }
 
     const blob = await response.blob();
     return URL.createObjectURL(blob);
   } catch (error) {
-    console.error("Erro ao gerar ZIP:", error);
+    console.error("❌ Erro ao gerar ZIP:", error);
     return null;
   }
 }

@@ -5,7 +5,8 @@ interface Props {
   onClick: () => void;
 }
 
-const effects = [
+// Lista de efeitos disponíveis
+const filtroOptions = [
   { nome: "Nenhum", class: "" },
   { nome: "Efeito Tumblr", class: "effect-tumblr" },
   { nome: "Efeito Prism", class: "effect-prism" },
@@ -17,6 +18,8 @@ const effects = [
 
 const SplashScreen: React.FC<Props> = ({ onClick }) => {
   const [showFilters, setShowFilters] = useState(false);
+
+  // Recupera filtro atual salvo ou nenhum
   const [selectedEffect, setSelectedEffect] = useState(
     localStorage.getItem("filtroSelecionado") || ""
   );
@@ -34,19 +37,19 @@ const SplashScreen: React.FC<Props> = ({ onClick }) => {
 
   return (
     <div className="splash-screen" onClick={onClick}>
-      {/* Engrenagem */}
+      {/* Engrenagem para abrir painel de filtro */}
       <button className="gear-button" onClick={handleConfigClick}>
         ⚙️
       </button>
 
-      {/* Painel de filtros */}
+      {/* Painel flutuante de filtros */}
       {showFilters && (
         <div className="filter-panel" onClick={(e) => e.stopPropagation()}>
           <h4>🎛️ Escolha um filtro:</h4>
           <select value={selectedEffect} onChange={handleEffectChange}>
-            {effects.map((ef, idx) => (
-              <option key={idx} value={ef.class}>
-                {ef.nome}
+            {filtroOptions.map((filtro, idx) => (
+              <option key={idx} value={filtro.class}>
+                {filtro.nome}
               </option>
             ))}
           </select>

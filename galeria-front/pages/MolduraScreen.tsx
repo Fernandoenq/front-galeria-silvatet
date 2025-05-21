@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./MolduraScreen.css";
 
 interface Moldura {
@@ -14,25 +14,18 @@ interface Props {
 const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
   const [molduras, setMolduras] = useState<Moldura[]>([]);
   const [selecionada, setSelecionada] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Carrega molduras armazenadas no sessionStorage
   useEffect(() => {
-    // Molduras pré-carregadas (armazenadas em /public/assets/molduras/)
-    const moldurasExemplo: Moldura[] = [
-      { id: 1, src: "/assets/molduras/moldura1.png", nome: "Moldura 1" },
-      { id: 2, src: "/assets/molduras/moldura2.png", nome: "Moldura 2" },
-      { id: 3, src: "/assets/molduras/moldura3.png", nome: "Moldura 3" },
-      { id: 4, src: "/assets/molduras/moldura4.png", nome: "Moldura 4" },
-    ];
-    setMolduras(moldurasExemplo);
+    const salvas = sessionStorage.getItem("moldurasImportadas");
+    if (salvas) {
+      setMolduras(JSON.parse(salvas));
+    }
   }, []);
 
-  const handleConfirmar = () => {
-    if (selecionada !== null) {
-      localStorage.setItem("molduraSelecionada", molduras[selecionada].src);
-      onConfirm(); // Avança para a galeria
-    } else {
-      alert("Selecione uma moldura antes de continuar.");
-    }
+  const handleGearClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleUploadMoldura = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,34 +34,54 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
       const reader = new FileReader();
       reader.onload = () => {
         const novaMoldura: Moldura = {
-          id: molduras.length + 1,
+          id: Date.now(), // ID único baseado em timestamp
           src: reader.result as string,
           nome: file.name,
         };
-        setMolduras((prev) => [...prev, novaMoldura]);
+
+        setMolduras((prev) => {
+          const atualizadas = [...prev, novaMoldura];
+          sessionStorage.setItem("moldurasImportadas", JSON.stringify(atualizadas));
+          return atualizadas;
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleConfirmar = () => {
+    if (selecionada !== null) {
+      localStorage.setItem("molduraSelecionada", molduras.find(m => m.id === selecionada)?.src || "");
+      onConfirm();
+    } else {
+      alert("Selecione uma moldura antes de continuar.");
+    }
+  };
+
   return (
     <div className="container">
-      <h2>Escolha sua moldura</h2>
+      {/* Engrenagem para upload */}
+      <div className="gear-icon" onClick={handleGearClick}>
+        ⚙️
+      </div>
 
-      {/* Upload manual da moldura */}
+      {/* Upload invisível */}
       <input
-        className="upload"
         type="file"
         accept="image/png, image/jpeg"
+        ref={fileInputRef}
         onChange={handleUploadMoldura}
+        style={{ display: "none" }}
       />
 
+      <h2>Escolha sua moldura</h2>
+
       <div className="grid">
-        {molduras.map((moldura, index) => (
+        {molduras.map((moldura) => (
           <div
             key={moldura.id}
-            className={`item ${selecionada === index ? "selected" : ""}`}
-            onClick={() => setSelecionada(index)}
+            className={`item ${selecionada === moldura.id ? "selected" : ""}`}
+            onClick={() => setSelecionada(moldura.id)}
           >
             <img src={moldura.src} alt={moldura.nome} />
             <p>{moldura.nome}</p>

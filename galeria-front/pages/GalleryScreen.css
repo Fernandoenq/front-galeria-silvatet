@@ -1,7 +1,7 @@
 .gallery-screen {
   background-color: #111;
   min-height: 100vh;
-  padding: 20px;
+  padding: 32px 20px 40px;
   color: white;
   font-family: sans-serif;
   display: flex;
@@ -12,17 +12,17 @@
 .filter-buttons {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .filter-buttons button {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border: none;
   border-radius: 6px;
   background-color: #444;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   min-width: 90px;
@@ -37,27 +37,34 @@
   font-weight: bold;
 }
 
+/* 📸 Grid de imagens */
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 50px;
   width: 100%;
-  max-width: 400px;
-  padding-top: 10px;
+  max-width: 800px;
+  padding-top: 20px;
 }
 
 .image-container {
   position: relative;
   border: 1px solid #333;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .image-item {
   width: 100%;
   display: block;
   object-fit: cover;
+  height: 220px;
   cursor: pointer;
+  border-radius: 2px;
 }
 
 .image-label {
@@ -80,6 +87,7 @@
 .foto-wrapper {
   position: relative;
   width: 100%;
+  height: 100%;
 }
 
 .moldura-sobreposta {
@@ -87,13 +95,23 @@
   top: 0;
   left: 0;
   width: 100%;
+  height: 220px;
   pointer-events: none;
-  border-radius: 6px;
+  border-radius: 8px;
   z-index: 2;
 }
 
-/* 🎨 Efeitos visuais */
+/* 📌 Checkbox de seleção */
+.select-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  transform: scale(1.2);
+  cursor: pointer;
+}
 
+/* 🎨 Efeitos visuais */
 .effect-tumblr {
   filter: saturate(140%) hue-rotate(-20deg) contrast(110%);
 }
@@ -116,4 +134,12 @@
 
 .effect-preto-branco {
   filter: grayscale(100%);
+}
+
+/* 🆕 Nome da imagem centralizado abaixo */
+.image-name {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ccc;
+  text-align: center;
 }
