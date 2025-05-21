@@ -6,7 +6,6 @@ import "./GalleryScreen.css";
 interface ImageItem {
   nome: string;
   url: string;
-  modo: string;
 }
 
 interface SelectedImageInfo {
@@ -19,15 +18,15 @@ const GalleryScreen: React.FC = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState<SelectedImageInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [modo, setModo] = useState<"completo" | "simples">("completo");
+  const [moldura, setMoldura] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<string>("");
 
   useEffect(() => {
     const loadImages = async () => {
       setLoading(true);
       try {
-        const result = await fetchImages(modo);
+        const result = await fetchImages();
         setImages(result);
-        setSelected([]);
       } catch (error) {
         console.error("Erro ao carregar imagens:", error);
       } finally {
@@ -35,8 +34,18 @@ const GalleryScreen: React.FC = () => {
       }
     };
 
+    const molduraSalva = localStorage.getItem("molduraSelecionada");
+    if (molduraSalva) {
+      setMoldura(molduraSalva);
+    }
+
+    const filtroSalvo = localStorage.getItem("filtroSelecionado");
+    if (filtroSalvo) {
+      setFiltro(filtroSalvo);
+    }
+
     loadImages();
-  }, [modo]);
+  }, []);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -70,15 +79,6 @@ const GalleryScreen: React.FC = () => {
 
   return (
     <div className="gallery-screen">
-      <div className="filter-buttons">
-        <button className={modo === "completo" ? "active" : ""} onClick={() => setModo("completo")}>
-          🎨 Finais
-        </button>
-        <button className={modo === "simples" ? "active" : ""} onClick={() => setModo("simples")}>
-          ⚙️ Técnicas
-        </button>
-      </div>
-
       {selected.length > 0 && (
         <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
           📥 Gerar QRCode para {selected.length} imagem{selected.length > 1 ? "s" : ""}
@@ -101,14 +101,20 @@ const GalleryScreen: React.FC = () => {
                   onChange={() => handleSelect(img.nome)}
                   className="select-checkbox"
                 />
-                <img
-                  src={img.url}
-                  alt={img.nome}
-                  className="image-item"
-                  loading="lazy"
-                />
-                <div className="image-label">
-                  {img.modo === "simples" ? "⚙️ Técnico" : "🎨 Final"}
+                <div className="foto-wrapper">
+                  <img
+                    src={img.url}
+                    alt={img.nome}
+                    className={`image-item ${filtro}`}
+                    loading="lazy"
+                  />
+                  {moldura && (
+                    <img
+                      src={moldura}
+                      alt="moldura"
+                      className="moldura-sobreposta"
+                    />
+                  )}
                 </div>
               </div>
             );

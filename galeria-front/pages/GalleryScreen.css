@@ -76,3 +76,44 @@
   font-size: 14px;
   padding: 12px;
 }
+
+.foto-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.moldura-sobreposta {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+/* 🎨 Efeitos visuais */
+
+.effect-tumblr {
+  filter: saturate(140%) hue-rotate(-20deg) contrast(110%);
+}
+
+.effect-prism {
+  filter: contrast(120%) saturate(150%) hue-rotate(45deg);
+}
+
+.effect-freckles {
+  filter: brightness(105%) contrast(105%);
+}
+
+.effect-vintage {
+  filter: sepia(30%) contrast(90%) brightness(110%);
+}
+
+.effect-silly {
+  filter: hue-rotate(180deg) saturate(250%);
+}
+
+.effect-preto-branco {
+  filter: grayscale(100%);
+}

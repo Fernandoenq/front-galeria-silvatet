@@ -1,12 +1,14 @@
-import { useState } from "react";
 import SplashScreen from "../pages/SplashScreen";
+import MolduraScreen from "../pages/MolduraScreen";
 import GalleryScreen from "../pages/GalleryScreen";
-
+import { useState } from "react";
 
 function App() {
-  const [started, setStarted] = useState(false);
+  const [tela, setTela] = useState<"splash" | "moldura" | "galeria">("splash");
 
-  return started ? <GalleryScreen /> : <SplashScreen onClick={() => setStarted(true)} />;
+  if (tela === "splash") return <SplashScreen onClick={() => setTela("moldura")} />;
+  if (tela === "moldura") return <MolduraScreen onConfirm={() => setTela("galeria")} />;
+  return <GalleryScreen />;
 }
 
 export default App;
