@@ -101,14 +101,18 @@
   z-index: 2;
 }
 
-/* 📌 Checkbox de seleção */
 .select-checkbox {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 3;
-  transform: scale(1.2);
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
+  z-index: 3;
+  accent-color: #1e90ff; /* cor azul padrão do botão */
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
 /* 🎨 Efeitos visuais */

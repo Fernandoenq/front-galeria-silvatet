@@ -13,10 +13,9 @@ interface Props {
 
 const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
   const [molduras, setMolduras] = useState<Moldura[]>([]);
-  const [selecionada, setSelecionada] = useState<number | null>(null);
+  const [selecionadas, setSelecionadas] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Carrega molduras armazenadas no sessionStorage
   useEffect(() => {
     const salvas = sessionStorage.getItem("moldurasImportadas");
     if (salvas) {
@@ -34,7 +33,7 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
       const reader = new FileReader();
       reader.onload = () => {
         const novaMoldura: Moldura = {
-          id: Date.now(), // ID único baseado em timestamp
+          id: Date.now(),
           src: reader.result as string,
           nome: file.name,
         };
@@ -49,23 +48,23 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
     }
   };
 
-  const handleConfirmar = () => {
-    if (selecionada !== null) {
-      localStorage.setItem("molduraSelecionada", molduras.find(m => m.id === selecionada)?.src || "");
-      onConfirm();
-    } else {
-      alert("Selecione uma moldura antes de continuar.");
-    }
+  const toggleSelecionada = (id: number) => {
+    setSelecionadas((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleAvancar = () => {
+    const selecionadasInfo = molduras.filter((m) => selecionadas.includes(m.id));
+    sessionStorage.setItem("moldurasSelecionadas", JSON.stringify(selecionadasInfo));
+    localStorage.setItem("molduraSelecionada", selecionadasInfo[0]?.src || "");
+    onConfirm(); // troca para tela de galeria
   };
 
   return (
     <div className="container">
-      {/* Engrenagem para upload */}
-      <div className="gear-icon" onClick={handleGearClick}>
-        ⚙️
-      </div>
+      <div className="gear-icon" onClick={handleGearClick}>⚙️</div>
 
-      {/* Upload invisível */}
       <input
         type="file"
         accept="image/png, image/jpeg"
@@ -74,14 +73,14 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
         style={{ display: "none" }}
       />
 
-      <h2>Escolha sua moldura</h2>
+      <h2>Molduras carregadas</h2>
 
       <div className="grid">
         {molduras.map((moldura) => (
           <div
             key={moldura.id}
-            className={`item ${selecionada === moldura.id ? "selected" : ""}`}
-            onClick={() => setSelecionada(moldura.id)}
+            className={`item ${selecionadas.includes(moldura.id) ? "ativa" : ""}`}
+            onClick={() => toggleSelecionada(moldura.id)}
           >
             <img src={moldura.src} alt={moldura.nome} />
             <p>{moldura.nome}</p>
@@ -89,9 +88,11 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
         ))}
       </div>
 
-      <button className="confirmar" onClick={handleConfirmar}>
-        Confirmar moldura
-      </button>
+      {selecionadas.length > 0 && (
+        <button className="confirmar" onClick={handleAvancar}>
+          Avançar
+        </button>
+      )}
     </div>
   );
 };

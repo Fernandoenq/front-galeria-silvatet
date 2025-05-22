@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import JSZip from "jszip";
-import { fetchImages, getDownloadLink } from "../services/s3Service";
+import { fetchImages } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import "./GalleryScreen.css";
 
@@ -9,108 +8,64 @@ interface ImageItem {
   url: string;
 }
 
-interface SelectedImageInfo {
-  originalUrl: string;
-  downloadUrl: string;
-}
-
-const renderImageWithEffects = async (
-  imageUrl: string,
-  molduraUrl: string | null,
-  filtro: string
-): Promise<Blob> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
-
-    img.onload = async () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      switch (filtro) {
-        case "effect-tumblr":
-          ctx.filter = "saturate(1.4) hue-rotate(-20deg) contrast(1.1)";
-          break;
-        case "effect-prism":
-          ctx.filter = "contrast(1.2) saturate(1.5) hue-rotate(45deg)";
-          break;
-        case "effect-freckles":
-          ctx.filter = "brightness(1.05) contrast(1.05)";
-          break;
-        case "effect-vintage":
-          ctx.filter = "sepia(0.3) contrast(0.9) brightness(1.1)";
-          break;
-        case "effect-silly":
-          ctx.filter = "hue-rotate(180deg) saturate(2.5)";
-          break;
-        case "effect-preto-branco":
-          ctx.filter = "grayscale(1)";
-          break;
-        default:
-          ctx.filter = "none";
-      }
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.filter = "none";
-
-      if (molduraUrl) {
-        const molduraImg = new Image();
-        molduraImg.crossOrigin = "anonymous";
-        molduraImg.src = molduraUrl;
-
-        await new Promise((res) => {
-          molduraImg.onload = () => {
-            ctx.drawImage(molduraImg, 0, 0, canvas.width, canvas.height);
-            res(true);
-          };
-        });
-      }
-
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-      }, "image/png");
-    };
-  });
-};
-
 const GalleryScreen: React.FC = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
-  const [selectedImage, setSelectedImage] = useState<SelectedImageInfo | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [moldura, setMoldura] = useState<string | null>(null);
-  const [filtro, setFiltro] = useState<string>("");
+  const [selectedEffect] = useState<string>(
+  localStorage.getItem("filtroSelecionado") || ""
+);
 
-  useEffect(() => {
-    const loadImages = async () => {
-      setLoading(true);
-      try {
-        const result = await fetchImages();
+
+  const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
+    if (list1.length !== list2.length) return false;
+    const sorted1 = [...list1].sort((a, b) => a.nome.localeCompare(b.nome));
+    const sorted2 = [...list2].sort((a, b) => a.nome.localeCompare(b.nome));
+    return sorted1.every(
+      (img, idx) => img.nome === sorted2[idx].nome && img.url === sorted2[idx].url
+    );
+  };
+
+  const loadImages = async () => {
+    try {
+      const result = await fetchImages();
+      const shouldUpdate = !areImageListsEqual(images, result);
+      if (shouldUpdate) {
         setImages(result);
-      } catch (error) {
-        console.error("Erro ao carregar imagens:", error);
-      } finally {
-        setLoading(false);
+        const availableNames = result.map((img) => img.nome);
+        const stillSelected = selected.filter((name) => availableNames.includes(name));
+        setSelected(stillSelected);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar imagens:", error);
+    }
+  };
+
+  // Atualiza automaticamente apenas quando nenhuma imagem estiver selecionada
+  useEffect(() => {
+    let isMounted = true;
+
+    const watchImages = async () => {
+      while (isMounted) {
+        if (selected.length === 0) {
+          await loadImages();
+        }
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     };
 
-    const molduraSalva = localStorage.getItem("molduraSelecionada");
-    if (molduraSalva) {
-      setMoldura(molduraSalva);
-    }
+    setLoading(true);
+    loadImages().then(() => {
+      setLoading(false);
+      watchImages();
+    });
 
-    const filtroSalvo = localStorage.getItem("filtroSelecionado");
-    if (filtroSalvo) {
-      setFiltro(filtroSalvo);
-    }
-
-    loadImages();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [selected]);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -120,51 +75,19 @@ const GalleryScreen: React.FC = () => {
     );
   };
 
-  const handleClickImage = async (img: ImageItem) => {
-    const blob = await renderImageWithEffects(img.url, moldura, filtro);
-    const fileUrl = URL.createObjectURL(blob);
-
-    setSelectedImage({
-      originalUrl: fileUrl,
-      downloadUrl: fileUrl,
-    });
-  };
-
-  const handleDownloadQRCode = async () => {
+  const handleDownloadQRCode = () => {
     if (selected.length === 1) {
-      const selectedImg = images.find((img) => img.nome === selected[0]);
-      if (selectedImg) {
-        const blob = await renderImageWithEffects(selectedImg.url, moldura, filtro);
-        const fileUrl = URL.createObjectURL(blob);
-
-        setSelectedImage({
-          originalUrl: fileUrl,
-          downloadUrl: fileUrl,
-        });
+      const img = images.find((i) => i.nome === selected[0]);
+      if (img) {
+        setSelectedImageUrl(img.url);
+        setMultipleImagesUrls(null);
       }
     } else if (selected.length > 1) {
-      const blobs = await Promise.all(
-        selected.map((name) => {
-          const img = images.find((i) => i.nome === name);
-          if (!img) return null;
-          return renderImageWithEffects(img.url, moldura, filtro);
-        })
-      );
-
-      const zip = new JSZip();
-      blobs.forEach((blob, i) => {
-        if (blob) {
-          zip.file(`imagem${i + 1}.png`, blob);
-        }
-      });
-
-      const content = await zip.generateAsync({ type: "blob" });
-      const zipUrl = URL.createObjectURL(content);
-
-      setSelectedImage({
-        originalUrl: zipUrl,
-        downloadUrl: zipUrl,
-      });
+      const selectedUrls = images
+        .filter((img) => selected.includes(img.nome))
+        .map((img) => img.url);
+      setMultipleImagesUrls(selectedUrls);
+      setSelectedImageUrl(null);
     }
   };
 
@@ -192,11 +115,11 @@ const GalleryScreen: React.FC = () => {
                   onChange={() => handleSelect(img.nome)}
                   className="select-checkbox"
                 />
-                <div className="foto-wrapper" onClick={() => handleClickImage(img)}>
+                <div className="foto-wrapper">
                   <img
                     src={img.url}
                     alt={img.nome}
-                    className={`image-item ${filtro}`}
+                    className={`image-item ${selectedEffect}`}
                     loading="lazy"
                   />
                 </div>
@@ -207,11 +130,14 @@ const GalleryScreen: React.FC = () => {
         </div>
       )}
 
-      {selectedImage && (
+      {(selectedImageUrl || multipleImagesUrls) && (
         <QRCodeModal
-          imageUrl={selectedImage.originalUrl}
-          qrCodeLink={selectedImage.downloadUrl}
-          onClose={() => setSelectedImage(null)}
+          imageUrl={selectedImageUrl || ""}
+          multipleImages={multipleImagesUrls || undefined}
+          onClose={() => {
+            setSelectedImageUrl(null);
+            setMultipleImagesUrls(null);
+          }}
         />
       )}
     </div>

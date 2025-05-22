@@ -73,7 +73,6 @@ button.confirmar:hover {
   z-index: 10;
   transition: transform 0.2s ease;
 }
-
-.gear-icon:hover {
-  transform: rotate(30deg);
+.item.selected {
+  border: 4px solid #4CAF50;
 }

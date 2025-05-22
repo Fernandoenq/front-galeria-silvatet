@@ -9,96 +9,90 @@
 }
 
 .qr-modal-content {
-  background-color: #fff;
-  padding: 28px 36px;
-  border-radius: 18px;
-  max-width: 500px;
-  width: 90%;
+  background-color: #ffffff;
+  padding: 32px 40px;
+  border-radius: 20px;
+  max-width: 520px;
+  width: 92%;
   text-align: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .qr-modal-image {
   width: 100%;
   max-height: 360px;
   object-fit: contain;
-  border-radius: 10px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e6e6e6;
 }
 
 .qr-modal-text {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 12px;
+  font-size: 17px;
+  color: #222;
+  margin-bottom: 14px;
   font-weight: 600;
-}
-
-.qr-code-img {
-  margin-bottom: 20px;
-  max-width: 180px;
-  width: 100%;
-}
-
-.qr-modal-close {
-  display: inline-block;
-  background-color: #444;
-  color: white;
-  padding: 8px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 10px;
-  transition: background-color 0.3s ease;
-}
-
-.qr-modal-close:hover {
-  background-color: #222;
+  letter-spacing: 0.3px;
 }
 
 .qr-code-wrapper {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.qr-modal-download {
-  margin-top: 10px;
-  background-color: #1e90ff;
-  color: white;
-  padding: 10px 22px;
+.qr-modal-download,
+.qr-modal-close {
+  display: inline-block;
+  padding: 10px 24px;
+  font-size: 15px;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
   transition: background-color 0.3s ease;
 }
 
+.qr-modal-download {
+  background-color: #1e90ff;
+  color: #fff;
+  margin-right: 10px;
+}
+
 .qr-modal-download:hover {
-  background-color: #006edc;
+  background-color: #007be6;
+}
+
+.qr-modal-close {
+  background-color: #555;
+  color: #fff;
+}
+
+.qr-modal-close:hover {
+  background-color: #333;
 }
 
 .moldura-selector {
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .moldura-lista {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .moldura-thumb {
-  width: 64px;
-  height: 64px;
+  width: 100px;
+  height: 100px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .moldura-thumb:hover {
@@ -107,9 +101,20 @@
 
 .moldura-thumb.ativa {
   border-color: #1e90ff;
-  box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.3);
+  box-shadow: 0 0 0 4px rgba(30, 144, 255, 0.3);
 }
 
 .foto-wrapper {
   position: relative;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
