@@ -15,8 +15,9 @@ const GalleryScreen: React.FC = () => {
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEffect] = useState<string>(
-    localStorage.getItem("filtroSelecionado") || ""
-  );
+  localStorage.getItem("filtroSelecionado") || ""
+);
+
 
   const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
@@ -42,6 +43,7 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
+  // Atualiza automaticamente apenas quando nenhuma imagem estiver selecionada
   useEffect(() => {
     let isMounted = true;
 
@@ -107,23 +109,21 @@ const GalleryScreen: React.FC = () => {
             const isSelected = selected.includes(img.nome);
             return (
               <div className="image-container" key={idx}>
-                <label className="image-label">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => handleSelect(img.nome)}
-                    className="select-checkbox"
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleSelect(img.nome)}
+                  className="select-checkbox"
+                />
+                <div className="foto-wrapper">
+                  <img
+                    src={img.url}
+                    alt={img.nome}
+                    className={`image-item ${selectedEffect}`}
+                    loading="lazy"
                   />
-                  <div className={`foto-wrapper ${isSelected ? "selected" : ""}`}>
-                    <img
-                      src={img.url}
-                      alt={img.nome}
-                      className={`image-item ${selectedEffect}`}
-                      loading="lazy"
-                    />
-                  </div>
-                  <p className="image-name">{img.nome}</p>
-                </label>
+                </div>
+                <p className="image-name">{img.nome}</p>
               </div>
             );
           })}
