@@ -9,35 +9,24 @@
   align-items: center;
 }
 
-.filter-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+.generate-qr-btn {
   margin-bottom: 20px;
-}
-
-.filter-buttons button {
-  padding: 10px 14px;
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #1e90ff;
+  color: white;
   border: none;
   border-radius: 6px;
-  background-color: #444;
-  color: white;
-  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  min-width: 90px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.filter-buttons button:hover {
-  background-color: #555;
+.generate-qr-btn:hover {
+  background-color: #0d6efd;
+  transform: scale(1.03);
 }
 
-.filter-buttons button.active {
-  background-color: #1e90ff;
-  font-weight: bold;
-}
-
-/* 📸 Grid de imagens */
+/* Grid de imagens */
 .image-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -56,38 +45,60 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.image-container:hover {
+  box-shadow: 0 0 10px rgba(30, 144, 255, 0.4);
+}
+
+.image-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
 }
 
 .image-item {
   width: 100%;
-  display: block;
   object-fit: cover;
   height: 220px;
-  cursor: pointer;
   border-radius: 2px;
-}
-
-.image-label {
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 2px 6px;
-  font-size: 11px;
-  border-radius: 3px;
-}
-
-.text-center {
-  text-align: center;
-  font-size: 14px;
-  padding: 12px;
+  transition: transform 0.2s ease;
 }
 
 .foto-wrapper {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.foto-wrapper.selected {
+  outline: 3px solid #1e90ff;
+  outline-offset: -3px;
+  border-radius: 8px;
+  transition: outline 0.2s ease;
+}
+
+.select-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  z-index: 3;
+  accent-color: #1e90ff;
+  border-radius: 4px;
+  background-color: white;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.text-center {
+  text-align: center;
+  font-size: 14px;
+  padding: 12px;
 }
 
 .moldura-sobreposta {
@@ -101,21 +112,7 @@
   z-index: 2;
 }
 
-.select-checkbox {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  z-index: 3;
-  accent-color: #1e90ff; /* cor azul padrão do botão */
-  border-radius: 4px;
-  background-color: white;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-}
-
-/* 🎨 Efeitos visuais */
+/* Efeitos visuais */
 .effect-tumblr {
   filter: saturate(140%) hue-rotate(-20deg) contrast(110%);
 }
@@ -140,7 +137,6 @@
   filter: grayscale(100%);
 }
 
-/* 🆕 Nome da imagem centralizado abaixo */
 .image-name {
   margin-top: 8px;
   font-size: 13px;
