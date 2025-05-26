@@ -14,10 +14,9 @@ const GalleryScreen: React.FC = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedEffect] = useState<string>(
-  localStorage.getItem("filtroSelecionado") || ""
-);
-
+  const [selectedEffect, setSelectedEffect] = useState<string>(
+    localStorage.getItem("filtroSelecionado") || ""
+  );
 
   const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
@@ -43,7 +42,6 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
-  // Atualiza automaticamente apenas quando nenhuma imagem estiver selecionada
   useEffect(() => {
     let isMounted = true;
 
@@ -108,7 +106,10 @@ const GalleryScreen: React.FC = () => {
           {images.map((img, idx) => {
             const isSelected = selected.includes(img.nome);
             return (
-              <div className="image-container" key={idx}>
+              <label
+                className={`image-container ${isSelected ? "selected" : ""}`}
+                key={idx}
+              >
                 <input
                   type="checkbox"
                   checked={isSelected}
@@ -124,7 +125,7 @@ const GalleryScreen: React.FC = () => {
                   />
                 </div>
                 <p className="image-name">{img.nome}</p>
-              </div>
+              </label>
             );
           })}
         </div>
