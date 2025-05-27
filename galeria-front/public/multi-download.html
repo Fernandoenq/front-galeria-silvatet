@@ -55,17 +55,19 @@
     <h1>Imagens para Download</h1>
     <div id="imagens"></div>
   </div>
+
   <script>
     const params = new URLSearchParams(window.location.search);
-    const imagens = params.get("imagens")?.split(",") || [];
+    const nomes = params.get("imagens")?.split(",") || [];
     const container = document.getElementById("imagens");
 
-    imagens.forEach((url, index) => {
+    nomes.forEach((nome, index) => {
+      const url = `http://192.168.0.12:8000/uploaded/${decodeURIComponent(nome)}`;
       const block = document.createElement("div");
       block.className = "img-block";
       block.innerHTML = `
-        <img src="${decodeURIComponent(url)}" alt="imagem-${index + 1}" />
-        <a class="btn" href="${decodeURIComponent(url)}" download="imagem-${index + 1}.png">
+        <img src="${url}" alt="imagem-${index + 1}" />
+        <a class="btn" href="${url}" download="imagem-${index + 1}.png">
           ⬇️ Baixar imagem ${index + 1}
         </a>
       `;

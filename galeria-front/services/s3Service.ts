@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000"; // Em produção, troque para seu domínio
+const API_URL = "http://192.168.0.12:8000";
 
 /**
  * Busca todas as imagens da galeria.

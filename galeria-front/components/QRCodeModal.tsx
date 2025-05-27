@@ -1,7 +1,8 @@
-// QRCodeModal.tsx
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import "./QRCodeModal.css";
+
+const GALLERY_API_URL = import.meta.env.VITE_GALLERY_API_URL || "http://192.168.0.12:8000";
 
 interface QRCodeModalProps {
   imageUrl: string;
@@ -16,8 +17,8 @@ interface Moldura {
 }
 
 interface PrintItem {
-  url: string;
-  quantity: number;
+  nome: string;
+  quantidade: number;
 }
 
 const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleImages }) => {
@@ -32,6 +33,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
   useEffect(() => {
     const filtro = localStorage.getItem("filtroSelecionado") || "";
     setFiltroSelecionado(filtro);
+    setQrUrl("");
+    setPrintList([]);
 
     const selecionadas = sessionStorage.getItem("moldurasSelecionadas");
     if (selecionadas) {
@@ -40,17 +43,22 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
       const primeira = lista[0]?.src || null;
       if (primeira) {
         setMolduraSelecionada(primeira);
-        if (multipleImages?.length) {
-          setPreviewUrl(multipleImages[0]);
-          renderMultipleWithEffects(multipleImages, primeira, filtro);
-        } else {
-          renderWithEffects(imageUrl, primeira, filtro);
-        }
       } else {
         setPreviewUrl(imageUrl);
       }
     }
   }, [imageUrl, multipleImages]);
+
+  useEffect(() => {
+    if (molduraSelecionada) {
+      if (multipleImages?.length) {
+        setPreviewUrl(multipleImages[0]);
+        renderMultipleWithEffects(multipleImages, molduraSelecionada, filtroSelecionado);
+      } else {
+        renderWithEffects(imageUrl, molduraSelecionada, filtroSelecionado);
+      }
+    }
+  }, [molduraSelecionada, filtroSelecionado]);
 
   const getFiltro = (filtro: string) => {
     switch (filtro) {
@@ -64,7 +72,13 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     }
   };
 
-  const drawImageCentered = (ctx: CanvasRenderingContext2D, img: HTMLImageElement, canvasWidth: number, canvasHeight: number, filtro: string) => {
+  const drawImageCentered = (
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    canvasWidth: number,
+    canvasHeight: number,
+    filtro: string
+  ) => {
     ctx.filter = getFiltro(filtro);
     const scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
     const sw = img.width * scale;
@@ -80,14 +94,15 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
 
     for (const url of urls) {
       const blob = await renderBlob(url, molduraUrl, filtro);
-      const backendUrl = await enviarImagemParaBackend(blob);
-      if (backendUrl) generatedList.push({ url: backendUrl, quantity: 0 });
+      const nomeArquivo = `print_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
+      await enviarImagemParaBackend(blob, nomeArquivo, 1);
+      generatedList.push({ nome: nomeArquivo, quantidade: 1 });
     }
 
     setPrintList(generatedList);
 
     if (generatedList.length > 0) {
-      const joined = generatedList.map(i => encodeURIComponent(i.url)).join(",");
+      const joined = generatedList.map(i => encodeURIComponent(i.nome)).join(",");
       const redirectUrl = `http://192.168.0.12:5173/multi-download.html?imagens=${joined}`;
       const fullUrl = `http://192.168.0.12:5173/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
       setQrUrl(fullUrl);
@@ -96,11 +111,14 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
 
   const renderWithEffects = async (imgUrl: string, molduraUrl: string, filtro: string) => {
     const blob = await renderBlob(imgUrl, molduraUrl, filtro);
-    const backendUrl = await enviarImagemParaBackend(blob);
-    if (backendUrl) {
-      setPreviewUrl(URL.createObjectURL(blob));
-      setQrUrl(`http://192.168.0.12:5173/captura-lead.html?redirect=${encodeURIComponent(backendUrl)}`);
-    }
+    const nomeArquivo = `print_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
+    await enviarImagemParaBackend(blob, nomeArquivo, 1);
+    setPreviewUrl(URL.createObjectURL(blob));
+    setPrintList([{ nome: nomeArquivo, quantidade: 1 }]);
+
+    const redirectUrl = `http://192.168.0.12:5173/multi-download.html?imagens=${nomeArquivo}`;
+    const fullUrl = `http://192.168.0.12:5173/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+    setQrUrl(fullUrl);
   };
 
   const renderBlob = (imgUrl: string, molduraUrl: string, filtro: string): Promise<Blob> => {
@@ -133,40 +151,45 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     });
   };
 
-  const enviarImagemParaBackend = async (blob: Blob): Promise<string | null> => {
+  const enviarImagemParaBackend = async (blob: Blob, nomeArquivo: string, quantidade: number): Promise<void> => {
     const formData = new FormData();
-    formData.append("file", blob, "imagem-final.png");
+    formData.append("file", blob, nomeArquivo);
+    formData.append("nome", nomeArquivo);
+    formData.append("quantidade", String(quantidade));
 
     try {
-      const res = await fetch("http://192.168.0.12:8000/upload", {
+      await fetch(`${GALLERY_API_URL}/upload`, {
         method: "POST",
         body: formData,
       });
-
-      const data = await res.json();
-      return data.url;
     } catch (error) {
       console.error("❌ Erro ao enviar imagem para backend:", error);
-      return null;
+    }
+  };
+
+  const enviarParaImpressao = async () => {
+    try {
+      await fetch(`${GALLERY_API_URL}/marcar-para-impressao`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(printList),
+      });
+      alert("✅ Imagens enviadas para impressão");
+    } catch (err) {
+      console.error("❌ Erro ao marcar imagem para impressão:", err);
     }
   };
 
   const updateQuantity = (index: number, value: number) => {
     setPrintList(prev => {
       const updated = [...prev];
-      updated[index].quantity = value;
+      updated[index].quantidade = value;
       return updated;
     });
   };
 
   const handleSelectMoldura = (src: string) => {
     setMolduraSelecionada(src);
-    if (multipleImages?.length) {
-      setPreviewUrl(multipleImages[0]);
-      renderMultipleWithEffects(multipleImages, src, filtroSelecionado);
-    } else {
-      renderWithEffects(imageUrl, src, filtroSelecionado);
-    }
   };
 
   return (
@@ -176,10 +199,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
           {previewUrl && <img src={previewUrl} alt="Imagem final" className="qr-modal-image" />}
         </div>
 
-        <button
-          style={{ margin: "16px auto", padding: "8px 16px" }}
-          onClick={() => setOrientacao((prev) => (prev === "portrait" ? "landscape" : "portrait"))}
-        >
+        <button style={{ margin: "16px auto", padding: "8px 16px" }} onClick={() => setOrientacao(prev => prev === "portrait" ? "landscape" : "portrait")}>
           Modo: {orientacao === "portrait" ? "Retrato (9:16)" : "Paisagem (16:9)"}
         </button>
 
@@ -200,25 +220,38 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
           </div>
         )}
 
-        <p className="qr-modal-text">Escaneie para baixar</p>
-        <div className="qr-code-wrapper">
-          {qrUrl && <QRCode value={qrUrl} size={180} />}
-        </div>
+        {qrUrl && (
+          <>
+            <p className="qr-modal-text">Escaneie para baixar</p>
+            <div className="qr-code-wrapper">
+              <QRCode value={qrUrl} size={180} />
+            </div>
+          </>
+        )}
 
         {printList.length > 0 && (
-          <div className="qr-carousel">
-            {printList.map((item, idx) => (
-              <div key={idx} className="qr-carousel-item">
-                <img src={item.url} alt={`preview-${idx}`} className="qr-modal-image" />
-                <label>Quantidade para imprimir:</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={item.quantity}
-                  onChange={(e) => updateQuantity(idx, parseInt(e.target.value) || 0)}
-                />
-              </div>
-            ))}
+          <div className="qr-carousel-container">
+            <h3 className="qr-carousel-title">Imagens selecionadas</h3>
+            <div className="qr-carousel-grid">
+              {printList.map((item, idx) => (
+                <div key={idx} className="qr-carousel-card">
+                  <img src={`${GALLERY_API_URL}/uploaded/${item.nome}`} alt={`preview-${idx}`} className="qr-carousel-image" />
+                  <div className="qr-carousel-controls">
+                    <label htmlFor={`qtd-${idx}`}>Quantidade:</label>
+                    <input
+                      id={`qtd-${idx}`}
+                      type="number"
+                      min="1"
+                      value={item.quantidade}
+                      onChange={(e) => updateQuantity(idx, parseInt(e.target.value) || 1)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="qr-print-button" onClick={enviarParaImpressao}>
+              Enviar para Impressão
+            </button>
           </div>
         )}
 

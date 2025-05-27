@@ -18,12 +18,11 @@ const GalleryScreen: React.FC = () => {
     localStorage.getItem("filtroSelecionado") || ""
   );
 
+  // ✅ Compara as listas mantendo a ordem
   const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
-    const sorted1 = [...list1].sort((a, b) => a.nome.localeCompare(b.nome));
-    const sorted2 = [...list2].sort((a, b) => a.nome.localeCompare(b.nome));
-    return sorted1.every(
-      (img, idx) => img.nome === sorted2[idx].nome && img.url === sorted2[idx].url
+    return list1.every(
+      (img, idx) => img.nome === list2[idx].nome && img.url === list2[idx].url
     );
   };
 

@@ -13,6 +13,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 20px;
 }
 
@@ -43,7 +44,7 @@
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 50px;
   width: 100%;
-  max-width: 800px;
+  max-width: 960px;
   padding-top: 20px;
 }
 
@@ -71,7 +72,7 @@
   object-fit: cover;
   border-radius: 2px;
   display: block;
-  pointer-events: none; /* evita interferência no clique do label */
+  pointer-events: none;
 }
 
 .image-label {
@@ -153,4 +154,49 @@
   font-size: 13px;
   color: #ccc;
   text-align: center;
+}
+
+/* ✅ Responsivo */
+@media screen and (max-width: 768px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 24px;
+  }
+
+  .image-item,
+  .moldura-sobreposta {
+    height: 180px;
+  }
+
+  .select-checkbox {
+    top: 8px;
+    left: 8px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .gallery-screen {
+    padding: 20px 12px 30px;
+  }
+
+  .image-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .image-item,
+  .moldura-sobreposta {
+    height: 160px;
+  }
+
+  .image-label {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+
+  .image-name {
+    font-size: 12px;
+  }
 }
