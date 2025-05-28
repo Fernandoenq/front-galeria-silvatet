@@ -113,33 +113,33 @@ const GalleryScreen: React.FC = () => {
       ) : (
         <div className="image-grid">
           {images.map((img, idx) => {
-            const isSelected = selected.includes(img.nome);
-            return (
-              <label
-                className={`image-container ${isSelected ? "selected" : ""}`}
-                key={idx}
-              >
-                <input
-                  type="checkbox"
-                  checked={isSelected}
-                  onChange={(e) => {
-                    handleSelect(img.nome);
-                  }}
-                  className="select-checkbox"
-                />
+  const isSelected = selected.includes(img.nome);
+  return (
+    <div
+      className={`image-container ${isSelected ? "selected" : ""}`}
+      key={idx}
+      onClick={() => handleSelect(img.nome)} // <- isso ativa o clique
+    >
+      <input
+        type="checkbox"
+        checked={isSelected}
+        readOnly
+        className="select-checkbox"
+      />
 
-                <div className="foto-wrapper">
-                  <img
-                    src={img.url}
-                    alt={img.nome}
-                    className={`image-item ${selectedEffect}`}
-                    loading="lazy"
-                  />
-                </div>
-                <p className="image-name">{img.nome}</p>
-              </label>
-            );
-          })}
+      <div className="foto-wrapper">
+        <img
+          src={img.url}
+          alt={img.nome}
+          className={`image-item ${selectedEffect}`}
+          loading="lazy"
+        />
+      </div>
+      <p className="image-name">{img.nome}</p>
+    </div>
+  );
+})}
+
         </div>
       )}
 
