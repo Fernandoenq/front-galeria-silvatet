@@ -109,20 +109,6 @@
   z-index: 2;
 }
 
-.select-checkbox {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  z-index: 3;
-  accent-color: #1e90ff;
-  border-radius: 4px;
-  background-color: white;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-}
-
 /* 🎨 Efeitos visuais */
 .effect-tumblr {
   filter: saturate(140%) hue-rotate(-20deg) contrast(110%);
@@ -168,12 +154,7 @@
     height: 180px;
   }
 
-  .select-checkbox {
-    top: 8px;
-    left: 8px;
-    width: 18px;
-    height: 18px;
-  }
+
 }
 
 @media screen and (max-width: 480px) {
