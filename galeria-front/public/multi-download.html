@@ -11,6 +11,7 @@
       margin: 0;
       padding: 0;
     }
+
     .container {
       max-width: 600px;
       margin: 40px auto;
@@ -19,14 +20,17 @@
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
+
     h1 {
       text-align: center;
       margin-bottom: 32px;
     }
+
     .img-block {
       text-align: center;
       margin-bottom: 28px;
     }
+
     .img-block img {
       max-width: 100%;
       height: auto;
@@ -34,6 +38,7 @@
       margin-bottom: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
+
     .btn {
       background-color: #2196f3;
       color: white;
@@ -45,6 +50,7 @@
       text-decoration: none;
       display: inline-block;
     }
+
     .btn:hover {
       background-color: #0d8ae5;
     }
@@ -62,7 +68,8 @@
     const container = document.getElementById("imagens");
 
     nomes.forEach((nome, index) => {
-      const url = `http://192.168.0.12:8000/uploaded/${decodeURIComponent(nome)}`;
+      const decodedNome = decodeURIComponent(nome.trim());
+      const url = `http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334/uploaded/${decodedNome}`;
       const block = document.createElement("div");
       block.className = "img-block";
       block.innerHTML = `

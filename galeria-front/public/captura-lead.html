@@ -158,9 +158,11 @@
       const lead = { nome, cpf, email, telefone, aceitou_lgpd };
 
       try {
-        const response = await fetch("http://192.168.0.12:8000/leads", {
+        const response = await fetch("http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334/leads", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify(lead)
         });
 
@@ -176,7 +178,7 @@
         }
       } catch (err) {
         alert("Erro ao enviar os dados. Tente novamente.");
-        console.error(err);
+        console.error("Erro ao salvar lead:", err);
       }
     }
   </script>
