@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import "./QRCodeModal.css";
 
-const GALLERY_API_URL = import.meta.env.VITE_GALLERY_API_URL || "http://192.168.0.12:8000";
+const GALLERY_API_URL = import.meta.env.VITE_GALLERY_API_URL
+  ? import.meta.env.VITE_GALLERY_API_URL
+  : "http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334";
 
 interface QRCodeModalProps {
   imageUrl: string;
@@ -103,8 +105,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
 
     if (generatedList.length > 0) {
       const joined = generatedList.map(i => encodeURIComponent(i.nome)).join(",");
-      const redirectUrl = `http://192.168.0.12:5173/multi-download.html?imagens=${joined}`;
-      const fullUrl = `http://192.168.0.12:5173/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+      const redirectUrl = `${window.location.origin}/multi-download.html?imagens=${joined}`;
+      const fullUrl = `${window.location.origin}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
       setQrUrl(fullUrl);
     }
   };
@@ -116,8 +118,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     setPreviewUrl(URL.createObjectURL(blob));
     setPrintList([{ nome: nomeArquivo, quantidade: 1 }]);
 
-    const redirectUrl = `http://192.168.0.12:5173/multi-download.html?imagens=${nomeArquivo}`;
-    const fullUrl = `http://192.168.0.12:5173/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+    const redirectUrl = `${window.location.origin}/multi-download.html?imagens=${nomeArquivo}`;
+    const fullUrl = `${window.location.origin}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
     setQrUrl(fullUrl);
   };
 

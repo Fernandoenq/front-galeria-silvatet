@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.0.12:8000";
+const API_URL = import.meta.env.VITE_GALLERY_API_URL || "http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334";
 
 /**
  * Busca todas as imagens da galeria.
@@ -30,7 +30,6 @@ export async function fetchImages(): Promise<
 
 /**
  * Gera link de download para uma imagem individual.
- * (OBS: /download/{filename} precisa estar implementado no backend)
  */
 export function getDownloadLink(filename: string): string {
   return `${API_URL}/download/${encodeURIComponent(filename)}`;
@@ -47,7 +46,7 @@ export async function fetchZipDownloadUrl(fileNames: string[]): Promise<string |
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        filenames: fileNames, // Isso precisa ser exatamente igual ao modelo `FileList` do backend
+        filenames: fileNames,
       }),
     });
 
