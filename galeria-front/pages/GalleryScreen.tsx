@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { fetchImages } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import "./GalleryScreen.css";
@@ -18,7 +18,13 @@ const GalleryScreen: React.FC = () => {
     localStorage.getItem("filtroSelecionado") || ""
   );
 
-  // ✅ Compara as listas mantendo a ordem
+  // Ref para saber se o componente está montado
+  const isMounted = useRef(true);
+
+  // Ref para controlar o estado de seleção de imagens
+  const selectedRef = useRef<string[]>([]);
+  selectedRef.current = selected;
+
   const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
     return list1.every(
@@ -33,7 +39,9 @@ const GalleryScreen: React.FC = () => {
       if (shouldUpdate) {
         setImages(result);
         const availableNames = result.map((img) => img.nome);
-        const stillSelected = selected.filter((name) => availableNames.includes(name));
+        const stillSelected = selected.filter((name) =>
+          availableNames.includes(name)
+        );
         setSelected(stillSelected);
       }
     } catch (error) {
@@ -42,27 +50,29 @@ const GalleryScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const watchImages = async () => {
-      while (isMounted) {
-        if (selected.length === 0) {
-          await loadImages();
-        }
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-      }
-    };
-
+    isMounted.current = true;
     setLoading(true);
+
     loadImages().then(() => {
       setLoading(false);
-      watchImages();
+
+      const intervalLoop = async () => {
+        while (isMounted.current) {
+          // Só atualiza se nenhuma imagem estiver selecionada
+          if (selectedRef.current.length === 0) {
+            await loadImages();
+          }
+          await new Promise((res) => setTimeout(res, 3000));
+        }
+      };
+
+      intervalLoop();
     });
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
     };
-  }, [selected]);
+  }, []);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
