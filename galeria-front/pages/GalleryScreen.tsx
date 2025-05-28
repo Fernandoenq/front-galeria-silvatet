@@ -122,9 +122,12 @@ const GalleryScreen: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  onChange={() => handleSelect(img.nome)}
+                  onChange={(e) => {
+                    handleSelect(img.nome);
+                  }}
                   className="select-checkbox"
                 />
+
                 <div className="foto-wrapper">
                   <img
                     src={img.url}
