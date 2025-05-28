@@ -105,8 +105,10 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
 
     if (generatedList.length > 0) {
       const joined = generatedList.map(i => encodeURIComponent(i.nome)).join(",");
-      const redirectUrl = `${window.location.origin}/multi-download.html?imagens=${joined}`;
-      const fullUrl = `${window.location.origin}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+      const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com";
+
+      const redirectUrl = `${FRONTEND_URL}/multi-download.html?imagens=${joined}`;
+      const fullUrl = `${FRONTEND_URL}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
       setQrUrl(fullUrl);
     }
   };
@@ -118,8 +120,10 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     setPreviewUrl(URL.createObjectURL(blob));
     setPrintList([{ nome: nomeArquivo, quantidade: 1 }]);
 
-    const redirectUrl = `${window.location.origin}/multi-download.html?imagens=${nomeArquivo}`;
-    const fullUrl = `${window.location.origin}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+    const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com";
+
+    const redirectUrl = `${FRONTEND_URL}/multi-download.html?imagens=${nomeArquivo}`;
+    const fullUrl = `${FRONTEND_URL}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
     setQrUrl(fullUrl);
   };
 
