@@ -118,13 +118,18 @@ const GalleryScreen: React.FC = () => {
     <div
       className={`image-container ${isSelected ? "selected" : ""}`}
       key={idx}
-      onClick={() => handleSelect(img.nome)} // <- isso ativa o clique
+      onClick={(e) => {
+        e.preventDefault();         // ✅ evita comportamento default
+        e.stopPropagation();        // ✅ impede propagação para body/html
+        handleSelect(img.nome);
+      }}
     >
       <input
         type="checkbox"
         checked={isSelected}
         readOnly
         className="select-checkbox"
+        onClick={(e) => e.stopPropagation()} // ✅ impede que o clique no checkbox cause reload
       />
 
       <div className="foto-wrapper">
@@ -139,6 +144,7 @@ const GalleryScreen: React.FC = () => {
     </div>
   );
 })}
+
 
         </div>
       )}
