@@ -1,11 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./SplashScreen.css";
 
-interface Props {
-  onClick: () => void;
-}
-
-// Lista de efeitos disponíveis
 const filtroOptions = [
   { nome: "Nenhum", class: "" },
   { nome: "Efeito Tumblr", class: "effect-tumblr" },
@@ -16,13 +12,12 @@ const filtroOptions = [
   { nome: "Efeito Preto e Branco", class: "effect-preto-branco" },
 ];
 
-const SplashScreen: React.FC<Props> = ({ onClick }) => {
+const SplashScreen: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
-
-  // Recupera filtro atual salvo ou nenhum
   const [selectedEffect, setSelectedEffect] = useState(
     localStorage.getItem("filtroSelecionado") || ""
   );
+  const navigate = useNavigate();
 
   const handleConfigClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -35,28 +30,25 @@ const SplashScreen: React.FC<Props> = ({ onClick }) => {
     localStorage.setItem("filtroSelecionado", value);
   };
 
-  return (
-    <div className="splash-screen" onClick={onClick}>
-      {/* Engrenagem para abrir painel de filtro */}
-      <button className="gear-button" onClick={handleConfigClick}>
-        ⚙️
-      </button>
+  const handleAvancar = () => {
+    navigate("/moldura");
+  };
 
-      {/* Painel flutuante de filtros */}
+  return (
+    <div className="splash-screen" onClick={handleAvancar}>
+      <button className="gear-button" onClick={handleConfigClick}>⚙️</button>
+
       {showFilters && (
         <div className="filter-panel" onClick={(e) => e.stopPropagation()}>
           <h4>🎛️ Escolha um filtro:</h4>
           <select value={selectedEffect} onChange={handleEffectChange}>
             {filtroOptions.map((filtro, idx) => (
-              <option key={idx} value={filtro.class}>
-                {filtro.nome}
-              </option>
+              <option key={idx} value={filtro.class}>{filtro.nome}</option>
             ))}
           </select>
         </div>
       )}
 
-      {/* Logo central */}
       <img src="/assets/logo2.png" alt="Logo" className="splash-logo" />
     </div>
   );

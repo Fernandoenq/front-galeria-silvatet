@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./MolduraScreen.css";
 
 interface Moldura {
@@ -7,14 +8,11 @@ interface Moldura {
   nome: string;
 }
 
-interface Props {
-  onConfirm: () => void;
-}
-
-const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
+const MolduraScreen: React.FC = () => {
   const [molduras, setMolduras] = useState<Moldura[]>([]);
   const [selecionadas, setSelecionadas] = useState<number[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const salvas = sessionStorage.getItem("moldurasImportadas");
@@ -55,10 +53,10 @@ const MolduraScreen: React.FC<Props> = ({ onConfirm }) => {
   };
 
   const handleAvancar = () => {
-    const selecionadasInfo = molduras.filter((m) => selecionadas.includes(m.id));
-    sessionStorage.setItem("moldurasSelecionadas", JSON.stringify(selecionadasInfo));
-    localStorage.setItem("molduraSelecionada", selecionadasInfo[0]?.src || "");
-    onConfirm(); // troca para tela de galeria
+    sessionStorage.setItem("moldurasSelecionadasIds", JSON.stringify(selecionadas));
+    const primeiraSelecionada = molduras.find((m) => m.id === selecionadas[0]);
+    localStorage.setItem("molduraSelecionada", primeiraSelecionada?.src || "");
+    navigate("/galeria"); // Redireciona via react-router
   };
 
   return (

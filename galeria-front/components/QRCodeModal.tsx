@@ -38,17 +38,24 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     setQrUrl("");
     setPrintList([]);
 
-    const selecionadas = sessionStorage.getItem("moldurasSelecionadas");
-    if (selecionadas) {
-      const lista = JSON.parse(selecionadas) as Moldura[];
-      setMolduras(lista);
-      const primeira = lista[0]?.src || null;
+    const moldurasSalvas = sessionStorage.getItem("moldurasImportadas");
+    const moldurasSelecionadasIds = sessionStorage.getItem("moldurasSelecionadasIds");
+
+    if (moldurasSalvas && moldurasSelecionadasIds) {
+      const todasMolduras = JSON.parse(moldurasSalvas) as Moldura[];
+      const idsSelecionados = JSON.parse(moldurasSelecionadasIds) as number[];
+
+      const moldurasFiltradas = todasMolduras.filter((m) => idsSelecionados.includes(m.id));
+      setMolduras(moldurasFiltradas);
+
+      const primeira = moldurasFiltradas[0]?.src || null;
       if (primeira) {
         setMolduraSelecionada(primeira);
       } else {
         setPreviewUrl(imageUrl);
       }
     }
+
   }, [imageUrl, multipleImages]);
 
   useEffect(() => {
@@ -105,10 +112,12 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
 
     if (generatedList.length > 0) {
       const joined = generatedList.map(i => encodeURIComponent(i.nome)).join(",");
-      const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com";
+      const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com:3333";
 
-      const redirectUrl = `${FRONTEND_URL}/multi-download.html?imagens=${joined}`;
-      const fullUrl = `${FRONTEND_URL}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
+      const redirectUrl = `${FRONTEND_URL}/multi-download?imagens=${joined}`;
+      const fullUrl = `${FRONTEND_URL}/captura-lead?redirect=${encodeURIComponent(redirectUrl)}`;
+      setQrUrl(fullUrl);
+
       setQrUrl(fullUrl);
     }
   };
@@ -120,7 +129,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     setPreviewUrl(URL.createObjectURL(blob));
     setPrintList([{ nome: nomeArquivo, quantidade: 1 }]);
 
-    const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com";
+    const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || "http://ec2-15-228-149-9.sa-east-1.compute.amazonaws.com:3333";
 
     const redirectUrl = `${FRONTEND_URL}/multi-download.html?imagens=${nomeArquivo}`;
     const fullUrl = `${FRONTEND_URL}/captura-lead.html?redirect=${encodeURIComponent(redirectUrl)}`;
