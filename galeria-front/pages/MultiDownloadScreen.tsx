@@ -14,11 +14,37 @@ const MultiDownloadScreen: React.FC = () => {
       const block = document.createElement("div");
       block.className = "img-block";
       block.innerHTML = `
-        <img src="${url}" alt="imagem-${index + 1}" />
-        <a class="btn" href="${url}" download="imagem-${index + 1}.png">
-          ⬇️ Baixar imagem ${index + 1}
-        </a>
-      `;
+  <a 
+    href="${url}" 
+    download="imagem-${index + 1}.png"
+    style="
+      display: inline-block;
+      background-color: #1e90ff;
+      color: white;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+      margin: 16px auto;
+      display: block;
+      max-width: 300px;
+    ">
+    ⬇️ Baixar imagem ${index + 1}
+  </a>
+  <img 
+    src="${url}" 
+    alt="imagem-${index + 1}" 
+    style="
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto 32px;
+      border-radius: 12px;
+    "
+  />
+`;
+
       container?.appendChild(block);
     });
   }, []);

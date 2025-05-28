@@ -44,9 +44,9 @@ const CapturaLeadScreen: React.FC = () => {
       console.error("Erro ao salvar lead:", err);
     }
   };
-  const bodyStyle: React.CSSProperties = {
+const bodyStyle: React.CSSProperties = {
   margin: 0,
-  padding: 20,
+  padding: "20px",
   fontFamily: "Arial, sans-serif",
   backgroundColor: "#000",
   display: "flex",
@@ -54,11 +54,12 @@ const CapturaLeadScreen: React.FC = () => {
   alignItems: "center",
   minHeight: "100vh",
   color: "#fff",
+  boxSizing: "border-box", // ← garante que padding seja considerado no layout
 };
 
 const formContainerStyle: React.CSSProperties = {
   backgroundColor: "#111",
-  padding: "40px 30px",
+  padding: "40px 24px", // ← ajustado para margem mais segura em mobile
   borderRadius: "15px",
   width: "100%",
   maxWidth: "420px",
@@ -70,7 +71,6 @@ const h2Style: React.CSSProperties = {
   marginBottom: "24px",
   fontSize: "1.6rem",
 };
-
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "12px",
@@ -80,7 +80,9 @@ const inputStyle: React.CSSProperties = {
   borderRadius: "6px",
   color: "#fff",
   fontSize: "15px",
+  boxSizing: "border-box", // 👈 ESSENCIAL
 };
+
 
 const checkboxContainerStyle: React.CSSProperties = {
   display: "flex",
