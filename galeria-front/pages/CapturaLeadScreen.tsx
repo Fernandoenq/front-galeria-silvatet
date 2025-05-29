@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const API_URL = "http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334";
 
@@ -31,8 +31,9 @@ const CapturaLeadScreen: React.FC = () => {
 
       if (!response.ok) throw new Error("Erro ao salvar lead.");
 
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect");
+      const params = new URLSearchParams(document.location.href.split("?")[1]);
+
+      const redirect = localStorage.getItem("redirect_url");
 
       if (redirect) {
         window.location.href = redirect;
@@ -121,6 +122,13 @@ const logoStyle: React.CSSProperties = {
   opacity: 0.8,
 };
 
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get("redirect");
+  if (redirect) {
+    localStorage.setItem("redirect_url", redirect);
+  }
+}, []);
 
   return (
     <div style={bodyStyle}>
