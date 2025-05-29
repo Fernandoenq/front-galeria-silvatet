@@ -33,46 +33,33 @@ const GalleryScreen: React.FC = () => {
   };
 
   const loadImages = async () => {
-    try {
-      const result = await fetchImages();
-      const shouldUpdate = !areImageListsEqual(images, result);
-      if (shouldUpdate) {
-        setImages(result);
-        const availableNames = result.map((img) => img.nome);
-        const stillSelected = selected.filter((name) =>
-          availableNames.includes(name)
-        );
-        setSelected(stillSelected);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar imagens:", error);
+  try {
+    const result = await fetchImages();
+    const shouldUpdate = !areImageListsEqual(images, result);
+    if (shouldUpdate) {
+      setImages(result);
+
+      // ✅ Remove da seleção qualquer imagem que não esteja mais na lista atual
+      const availableNames = result.map((img) => img.nome);
+      const stillSelected = selectedRef.current.filter((name) =>
+        availableNames.includes(name)
+      );
+      setSelected(stillSelected);
     }
+  } catch (error) {
+    console.error("Erro ao carregar imagens:", error);
+  }
+};
+
+
+useEffect(() => {
+  isMounted.current = true;
+  loadImages().then(() => setLoading(false));
+  return () => {
+    isMounted.current = false;
   };
+}, []);
 
-  useEffect(() => {
-    isMounted.current = true;
-    setLoading(true);
-
-    loadImages().then(() => {
-      setLoading(false);
-
-      const intervalLoop = async () => {
-        while (isMounted.current) {
-          // Só atualiza se nenhuma imagem estiver selecionada
-          if (selectedRef.current.length === 0) {
-            await loadImages();
-          }
-          await new Promise((res) => setTimeout(res, 3000));
-        }
-      };
-
-      intervalLoop();
-    });
-
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -105,6 +92,16 @@ const GalleryScreen: React.FC = () => {
           📅 Gerar QRCode para {selected.length} imagem{selected.length > 1 ? "s" : ""}
         </button>
       )}
+
+      <button className="update-images-btn" onClick={async () => {
+        setLoading(true);
+        await loadImages();
+        setSelected([]); // ✅ limpa a seleção
+        setLoading(false);
+      }}>
+        🔄 Atualizar imagens
+      </button>
+
 
       {loading ? (
         <p className="text-center text-white">Carregando imagens...</p>

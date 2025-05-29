@@ -39,22 +39,22 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
     setPrintList([]);
 
     const moldurasSalvas = sessionStorage.getItem("moldurasImportadas");
-    const moldurasSelecionadasIds = sessionStorage.getItem("moldurasSelecionadasIds");
+  const moldurasSelecionadasIds = sessionStorage.getItem("moldurasSelecionadasIds");
 
-    if (moldurasSalvas && moldurasSelecionadasIds) {
-      const todasMolduras = JSON.parse(moldurasSalvas) as Moldura[];
-      const idsSelecionados = JSON.parse(moldurasSelecionadasIds) as number[];
+  if (moldurasSalvas && moldurasSelecionadasIds) {
+    const todasMolduras = JSON.parse(moldurasSalvas) as Moldura[];
+    const idsSelecionados = JSON.parse(moldurasSelecionadasIds) as number[];
 
-      const moldurasFiltradas = todasMolduras.filter((m) => idsSelecionados.includes(m.id));
-      setMolduras(moldurasFiltradas);
+    const moldurasFiltradas = todasMolduras.filter((m) => idsSelecionados.includes(m.id));
+    setMolduras(moldurasFiltradas);
 
-      const primeira = moldurasFiltradas[0]?.src || null;
-      if (primeira) {
-        setMolduraSelecionada(primeira);
-      } else {
-        setPreviewUrl(imageUrl);
-      }
+    const primeira = moldurasFiltradas[0]?.src || null;
+    if (primeira) {
+      setMolduraSelecionada(primeira);
+    } else {
+      setPreviewUrl(imageUrl);
     }
+  }
 
   }, [imageUrl, multipleImages]);
 
