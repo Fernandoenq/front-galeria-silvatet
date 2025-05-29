@@ -190,6 +190,9 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ imageUrl, onClose, multipleIm
         body: JSON.stringify(printList),
       });
       alert("✅ Imagens enviadas para impressão");
+      console.log(printList);
+      console.log(JSON.stringify(printList));
+
     } catch (err) {
       console.error("❌ Erro ao marcar imagem para impressão:", err);
     }
