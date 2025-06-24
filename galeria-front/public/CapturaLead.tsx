@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./CapturaLead.css";
 
-
- const GALLERY_API_URL =
+const GALLERY_API_URL =
   import.meta.env.VITE_GALLERY_API_URL || "http://localhost:3333";
 
 const CapturaLead: React.FC = () => {
@@ -35,7 +34,7 @@ const CapturaLead: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${GALLERY_API_URL}/leads`, {
+      const response = await fetch(`${GALLERY_API_URL}/person`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
