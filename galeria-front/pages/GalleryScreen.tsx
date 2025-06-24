@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { fetchImages } from "../services/s3Service";
+import { fetchImages, ImageItem } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import "./GalleryScreen.css";
 
-interface ImageItem {
-  nome: string;
-  url: string;
-}
+const MAX_IMAGES = 30;
 
 const GalleryScreen: React.FC = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -14,11 +11,7 @@ const GalleryScreen: React.FC = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedEffect, setSelectedEffect] = useState<string>(
-    localStorage.getItem("filtroSelecionado") || ""
-  );
 
-  // ✅ Compara as listas mantendo a ordem
   const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
     return list1.every(
@@ -29,6 +22,10 @@ const GalleryScreen: React.FC = () => {
   const loadImages = async () => {
     try {
       const result = await fetchImages();
+      if (result.length > MAX_IMAGES) {
+        result.splice(MAX_IMAGES);
+      }
+
       const shouldUpdate = !areImageListsEqual(images, result);
       if (shouldUpdate) {
         setImages(result);
@@ -102,12 +99,12 @@ const GalleryScreen: React.FC = () => {
         <p className="text-center text-white">Nenhuma imagem disponível.</p>
       ) : (
         <div className="image-grid">
-          {images.map((img, idx) => {
+          {images.map((img) => {
             const isSelected = selected.includes(img.nome);
             return (
               <label
                 className={`image-container ${isSelected ? "selected" : ""}`}
-                key={idx}
+                key={img.id ?? img.nome}
               >
                 <input
                   type="checkbox"
@@ -118,12 +115,22 @@ const GalleryScreen: React.FC = () => {
                 <div className="foto-wrapper">
                   <img
                     src={img.url}
-                    alt={img.nome}
-                    className={`image-item ${selectedEffect}`}
+                    alt={`Imagem ${img.nome}`}
+                    className="image-item"
                     loading="lazy"
+                    onError={(e) => {
+                      console.warn("⚠️ Erro inicial ao carregar imagem:", img.url);
+                      // Retry após 2 segundos
+                      setTimeout(() => {
+                        (e.target as HTMLImageElement).src = img.url;
+                      }, 2000);
+                    }}
+                    onLoad={() => {
+                      console.log("✅ Imagem carregada com sucesso:", img.url);
+                    }}
                   />
                 </div>
-                <p className="image-name">{img.nome}</p>
+                <p className="image-name">Imagem {img.nome}</p>
               </label>
             );
           })}

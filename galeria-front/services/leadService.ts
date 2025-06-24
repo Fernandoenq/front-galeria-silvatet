@@ -6,7 +6,9 @@ export interface Lead {
   aceitou_lgpd: boolean;
 }
 
-const API_URL = "http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334";
+// ✅ Usa variável de ambiente se houver, senão usa localhost
+const API_URL =
+  import.meta.env.VITE_GALLERY_API_URL || "http://127.0.0.1:8000";
 
 /**
  * Envia os dados do lead para o backend via POST.
@@ -14,7 +16,7 @@ const API_URL = "http://ec2-15-228-154-153.sa-east-1.compute.amazonaws.com:3334"
  * @throws Erro se o backend retornar status diferente de 200
  */
 export async function enviarLead(lead: Lead): Promise<void> {
-  const response = await fetch(`${API_URL}/leads`, {
+  const response = await fetch(`${API_URL}/person`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(lead),
