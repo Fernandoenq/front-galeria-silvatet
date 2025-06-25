@@ -59,8 +59,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
     setPreviewUrl(url);
     setPrintList([{ nome, url, quantidade: 1 }]);
 
-    const redirectUrl = `/download?imagens=${nome}`;
-    const fullUrl = `${BASE_URL}/captura-lead?redirect=${encodeURIComponent(redirectUrl)}`;
+    const redirectUrl = `/download?imagens=${encodeURIComponent(nome)}`; // ✅ Encode aqui
+    const fullUrl = `${BASE_URL}/captura-lead?redirect=${encodeURIComponent(redirectUrl)}`; // ✅ Encode aqui
     setQrUrl(fullUrl);
   };
 
