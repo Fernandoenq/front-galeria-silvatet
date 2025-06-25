@@ -33,6 +33,39 @@ const CapturaLead: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const { nome, cpf, email, telefone, aceitou_lgpd } = form;
+
+    // Validações
+    if (nome.trim().length < 6) {
+      alert("O nome deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    const onlyDigitsCPF = cpf.replace(/\D/g, "");
+    if (onlyDigitsCPF.length !== 11) {
+      alert("O CPF deve conter exatamente 11 dígitos numéricos.");
+      return;
+    }
+
+    const onlyDigitsPhone = telefone.replace(/\D/g, "");
+    if (onlyDigitsPhone.length !== 11) {
+      alert("O telefone deve conter exatamente 11 dígitos numéricos.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Digite um e-mail válido.");
+      return;
+    }
+
+    if (!aceitou_lgpd) {
+      alert("É necessário aceitar os termos da LGPD.");
+      return;
+    }
+
+    // Envio dos dados
     try {
       const response = await fetch(`${GALLERY_API_URL}/person`, {
         method: "POST",
@@ -47,10 +80,6 @@ const CapturaLead: React.FC = () => {
       alert("Erro ao enviar os dados. Tente novamente.");
       console.error("❌ Erro ao salvar lead:", err);
     }
-  };
-
-  const handlePular = () => {
-    navigate(redirect);
   };
 
   return (
@@ -103,10 +132,6 @@ const CapturaLead: React.FC = () => {
 
         <button type="submit">Prosseguir para download</button>
       </form>
-
-      <button onClick={handlePular} style={{ marginTop: "10px" }}>
-        Pular
-      </button>
 
       <img src="/assets/logo2.png" alt="Logo PicBrand" className="logo" />
     </div>
