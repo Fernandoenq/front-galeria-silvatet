@@ -5,6 +5,24 @@ import "./CapturaLead.css";
 const GALLERY_API_URL =
   import.meta.env.VITE_GALLERY_API_URL || "http://localhost:3333";
 
+// ✅ Validação real de CPF com dígitos verificadores
+function validarCPF(cpf: string): boolean {
+  cpf = cpf.replace(/[^\d]+/g, "");
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += +cpf.charAt(i) * (10 - i);
+  let resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== +cpf.charAt(9)) return false;
+
+  soma = 0;
+  for (let i = 0; i < 10; i++) soma += +cpf.charAt(i) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  return resto === +cpf.charAt(10);
+}
+
 const CapturaLead: React.FC = () => {
   const [form, setForm] = useState({
     nome: "",
@@ -43,8 +61,8 @@ const CapturaLead: React.FC = () => {
     }
 
     const onlyDigitsCPF = cpf.replace(/\D/g, "");
-    if (onlyDigitsCPF.length !== 11) {
-      alert("O CPF deve conter exatamente 11 dígitos numéricos.");
+    if (!validarCPF(onlyDigitsCPF)) {
+      alert("CPF inválido.");
       return;
     }
 
