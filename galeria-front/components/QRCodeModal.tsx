@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import "./QRCodeModal.css";
 
-const GALLERY_API_URL = import.meta.env.VITE_GALLERY_API_URL || "http://localhost:3333";
-const BASE_URL = import.meta.env.VITE_PUBLIC_HOST || window.location.origin;
+const GALLERY_API_URL =
+  import.meta.env.VITE_GALLERY_API_URL || "http://localhost:3333";
+const BASE_URL =
+  import.meta.env.VITE_PUBLIC_HOST || window.location.origin;
 
 interface QRCodeModalProps {
   imageUrl: string;
@@ -26,10 +28,18 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
   const [qrUrl, setQrUrl] = useState<string>("");
   const [orientacao, setOrientacao] = useState<"portrait" | "landscape">("portrait");
   const [printList, setPrintList] = useState<PrintItem[]>([]);
+  const [isVideo, setIsVideo] = useState<boolean>(false);
 
   useEffect(() => {
     setQrUrl("");
     setPrintList([]);
+    setIsVideo(false);
+
+    const nomeArquivo = multipleImages?.[0] || imageUrl;
+    const extensao = nomeArquivo.split(".").pop()?.toLowerCase();
+    if (extensao === "mp4") {
+      setIsVideo(true);
+    }
 
     if (multipleImages?.length) {
       setPreviewUrl(multipleImages[0]);
@@ -59,8 +69,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
     setPreviewUrl(url);
     setPrintList([{ nome, url, quantidade: 1 }]);
 
-    const redirectUrl = `/download?imagens=${encodeURIComponent(nome)}`; // ✅ Encode aqui
-    const fullUrl = `${BASE_URL}/captura-lead?redirect=${encodeURIComponent(redirectUrl)}`; // ✅ Encode aqui
+    const redirectUrl = `/download?imagens=${encodeURIComponent(nome)}`;
+    const fullUrl = `${BASE_URL}/captura-lead?redirect=${encodeURIComponent(redirectUrl)}`;
     setQrUrl(fullUrl);
   };
 
@@ -100,27 +110,37 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
         {!multipleImages?.length && (
           <>
             <div className="foto-wrapper">
-              <img
-                src={previewUrl}
-                alt="Imagem final"
-                className="qr-modal-image"
-                onError={(e) => {
-                  console.error("❌ Erro ao carregar preview:", previewUrl);
-                  (e.target as HTMLImageElement).src =
-                    "https://placehold.co/300x400?text=Erro+na+imagem";
-                }}
-              />
+              {isVideo ? (
+                <video
+                  src={previewUrl}
+                  controls
+                  style={{ width: "100%", borderRadius: "8px" }}
+                />
+              ) : (
+                <img
+                  src={previewUrl}
+                  alt="Imagem final"
+                  className="qr-modal-image"
+                  onError={(e) => {
+                    console.error("❌ Erro ao carregar preview:", previewUrl);
+                    (e.target as HTMLImageElement).src =
+                      "https://placehold.co/300x400?text=Erro+na+imagem";
+                  }}
+                />
+              )}
             </div>
-            <button
-              style={{ margin: "16px auto", padding: "8px 16px" }}
-              onClick={() =>
-                setOrientacao((prev) =>
-                  prev === "portrait" ? "landscape" : "portrait"
-                )
-              }
-            >
-              Modo: {orientacao === "portrait" ? "Retrato (9:16)" : "Paisagem (16:9)"}
-            </button>
+            {!isVideo && (
+              <button
+                style={{ margin: "16px auto", padding: "8px 16px" }}
+                onClick={() =>
+                  setOrientacao((prev) =>
+                    prev === "portrait" ? "landscape" : "portrait"
+                  )
+                }
+              >
+                Modo: {orientacao === "portrait" ? "Retrato (9:16)" : "Paisagem (16:9)"}
+              </button>
+            )}
           </>
         )}
 
@@ -133,7 +153,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
           </>
         )}
 
-        {printList.length > 0 && (
+        {!isVideo && printList.length > 0 && (
           <div className="qr-carousel-container">
             <h3 className="qr-carousel-title">Imagens selecionadas</h3>
             <div className="qr-carousel-scroll">

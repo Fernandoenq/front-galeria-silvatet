@@ -1,65 +1,66 @@
 import React, { useEffect, useState } from "react";
-import { fetchImages, ImageItem } from "../services/s3Service";
+import { fetchMedia, ImageItem } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import "./GalleryScreen.css";
 
-const MAX_IMAGES = 30;
+const MAX_ITEMS = 30;
 
 const GalleryScreen: React.FC = () => {
-  const [images, setImages] = useState<ImageItem[]>([]);
+  const [mediaItems, setMediaItems] = useState<ImageItem[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
 
-  const areImageListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
+  const areListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
     return list1.every(
-      (img, idx) => img.nome === list2[idx].nome && img.url === list2[idx].url
+      (item, idx) => item.nome === list2[idx].nome && item.url === list2[idx].url
     );
   };
 
-  const loadImages = async () => {
+  const loadMedia = async () => {
     try {
-      const result = await fetchImages();
-      if (result.length > MAX_IMAGES) {
-        result.splice(MAX_IMAGES);
+      const result = await fetchMedia(mediaType);
+      if (result.length > MAX_ITEMS) {
+        result.splice(MAX_ITEMS);
       }
 
-      const shouldUpdate = !areImageListsEqual(images, result);
+      const shouldUpdate = !areListsEqual(mediaItems, result);
       if (shouldUpdate) {
-        setImages(result);
-        const availableNames = result.map((img) => img.nome);
+        setMediaItems(result);
+        const availableNames = result.map((item) => item.nome);
         const stillSelected = selected.filter((name) => availableNames.includes(name));
         setSelected(stillSelected);
       }
     } catch (error) {
-      console.error("Erro ao carregar imagens:", error);
+      console.error("Erro ao carregar mídia:", error);
     }
   };
 
   useEffect(() => {
     let isMounted = true;
 
-    const watchImages = async () => {
+    const watchMedia = async () => {
       while (isMounted) {
         if (selected.length === 0) {
-          await loadImages();
+          await loadMedia();
         }
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     };
 
     setLoading(true);
-    loadImages().then(() => {
+    loadMedia().then(() => {
       setLoading(false);
-      watchImages();
+      watchMedia();
     });
 
     return () => {
       isMounted = false;
     };
-  }, [selected]);
+  }, [selected, mediaType]);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -71,15 +72,15 @@ const GalleryScreen: React.FC = () => {
 
   const handleDownloadQRCode = () => {
     if (selected.length === 1) {
-      const img = images.find((i) => i.nome === selected[0]);
-      if (img) {
-        setSelectedImageUrl(img.url);
+      const item = mediaItems.find((i) => i.nome === selected[0]);
+      if (item) {
+        setSelectedImageUrl(item.url);
         setMultipleImagesUrls(null);
       }
     } else if (selected.length > 1) {
-      const selectedUrls = images
-        .filter((img) => selected.includes(img.nome))
-        .map((img) => img.url);
+      const selectedUrls = mediaItems
+        .filter((i) => selected.includes(i.nome))
+        .map((i) => i.url);
       setMultipleImagesUrls(selectedUrls);
       setSelectedImageUrl(null);
     }
@@ -87,50 +88,79 @@ const GalleryScreen: React.FC = () => {
 
   return (
     <div className="gallery-screen">
+      {/* Seletor de tipo */}
+      <div className="media-type-selector">
+        <label>
+          <span style={{ marginRight: "0.5rem" }}>⚙️ Tipo:</span>
+          <select
+            value={mediaType}
+            onChange={(e) => {
+              setMediaType(e.target.value as "image" | "video");
+              setSelected([]);
+              setLoading(true);
+              loadMedia().then(() => setLoading(false));
+            }}
+          >
+            <option value="image">Imagens</option>
+            <option value="video">Vídeos</option>
+          </select>
+        </label>
+      </div>
+
       {selected.length > 0 && (
         <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
-          📅 Gerar QRCode para {selected.length} imagem{selected.length > 1 ? "s" : ""}
+          📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}{selected.length > 1 ? "s" : ""}
         </button>
       )}
 
       {loading ? (
-        <p className="text-center text-white">Carregando imagens...</p>
-      ) : images.length === 0 ? (
-        <p className="text-center text-white">Nenhuma imagem disponível.</p>
+        <p className="text-center text-white">Carregando {mediaType === "video" ? "vídeos" : "imagens"}...</p>
+      ) : mediaItems.length === 0 ? (
+        <p className="text-center text-white">Nenhum {mediaType === "video" ? "vídeo" : "imagem"} disponível.</p>
       ) : (
         <div className="image-grid">
-          {images.map((img) => {
-            const isSelected = selected.includes(img.nome);
+          {mediaItems.map((item) => {
+            const isSelected = selected.includes(item.nome);
             return (
               <label
                 className={`image-container ${isSelected ? "selected" : ""}`}
-                key={img.id ?? img.nome}
+                key={item.id ?? item.nome}
               >
                 <input
                   type="checkbox"
                   checked={isSelected}
-                  onChange={() => handleSelect(img.nome)}
+                  onChange={() => handleSelect(item.nome)}
                   className="select-checkbox"
                 />
                 <div className="foto-wrapper">
-                  <img
-                    src={img.url}
-                    alt={`Imagem ${img.nome}`}
-                    className="image-item"
-                    loading="lazy"
-                    onError={(e) => {
-                      console.warn("⚠️ Erro inicial ao carregar imagem:", img.url);
-                      // Retry após 2 segundos
-                      setTimeout(() => {
-                        (e.target as HTMLImageElement).src = img.url;
-                      }, 2000);
-                    }}
-                    onLoad={() => {
-                      console.log("✅ Imagem carregada com sucesso:", img.url);
-                    }}
-                  />
+                  {mediaType === "image" ? (
+                    <img
+                      src={item.url}
+                      alt={`Imagem ${item.nome}`}
+                      className="image-item"
+                      loading="lazy"
+                      onError={(e) => {
+                        console.warn("⚠️ Erro ao carregar imagem:", item.url);
+                        setTimeout(() => {
+                          (e.target as HTMLImageElement).src = item.url;
+                        }, 2000);
+                      }}
+                      onLoad={() => {
+                        console.log("✅ Imagem carregada:", item.url);
+                      }}
+                    />
+                  ) : (
+                    <video
+                      src={item.url}
+                      controls
+                      className="image-item"
+                      preload="metadata"
+                    />
+                  )}
                 </div>
-                <p className="image-name">Imagem {img.nome}</p>
+                <p className="image-name">
+                  {mediaType === "video" ? "Vídeo" : "Imagem"} {item.nome}
+                </p>
               </label>
             );
           })}

@@ -4,18 +4,18 @@ export interface ImageItem {
   url: string;
 }
 
-// Usa a variável de ambiente ou localhost como fallback
 const API_URL =
   import.meta.env.VITE_GALLERY_API_URL || "http://127.0.0.1:8000";
 
 /**
- * Busca todas as imagens da galeria.
+ * Busca imagens ou vídeos da galeria.
+ * @param tipo "image" ou "video"
  */
-export async function fetchImages(): Promise<ImageItem[]> {
+export async function fetchMedia(tipo: "image" | "video" = "image"): Promise<ImageItem[]> {
   try {
-    const response = await fetch(`${API_URL}/images`);
+    const response = await fetch(`${API_URL}/api/media?tipo=${tipo}`);
     if (!response.ok) {
-      throw new Error(`Erro ao buscar imagens: ${response.statusText}`);
+      throw new Error(`Erro ao buscar mídia: ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -24,31 +24,30 @@ export async function fetchImages(): Promise<ImageItem[]> {
       throw new Error("Resposta da API não contém 'images'.");
     }
 
-    // Verifica e mapeia as imagens válidas
-    const imagensValidas: ImageItem[] = data.images
-      .filter((img: any) => img.nome && img.url)
-      .map((img: any, index: number) => ({
-        id: img.id ?? index,
-        nome: img.nome,
-        url: img.url,
+    const itensValidos: ImageItem[] = data.images
+      .filter((item: any) => item.nome && item.url)
+      .map((item: any, index: number) => ({
+        id: item.id ?? index,
+        nome: item.nome,
+        url: item.url,
       }));
 
-    return imagensValidas;
+    return itensValidos;
   } catch (error) {
-    console.error("❌ Erro ao buscar imagens:", error);
+    console.error("❌ Erro ao buscar mídia:", error);
     return [];
   }
 }
 
 /**
- * Gera link de download para uma imagem individual.
+ * Gera link de download para um arquivo individual.
  */
 export function getDownloadLink(filename: string): string {
   return `${API_URL}/download/${encodeURIComponent(filename)}`;
 }
 
 /**
- * Gera um ZIP com múltiplas imagens selecionadas.
+ * Gera um ZIP com múltiplos arquivos selecionados.
  */
 export async function fetchZipDownloadUrl(
   fileNames: string[]
