@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchMedia, ImageItem } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
+import LeadSettings, { LeadConfig } from "./LeadSettings";
 import "./GalleryScreen.css";
 
 const MAX_ITEMS = 30;
@@ -12,6 +13,15 @@ const GalleryScreen: React.FC = () => {
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
+  const [showSettings, setShowSettings] = useState(false);
+
+  const [leadConfig, setLeadConfig] = useState<LeadConfig>({
+    capturaLead: true,
+    campoNome: true,
+    campoEmail: true,
+    campoTelefone: true,
+    campoCPF: true,
+  });
 
   const areListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
@@ -88,35 +98,89 @@ const GalleryScreen: React.FC = () => {
 
   return (
     <div className="gallery-screen">
-      {/* Seletor de tipo */}
-      <div className="media-type-selector">
-        <label>
-          <span style={{ marginRight: "0.5rem" }}>⚙️ Tipo:</span>
-          <select
-            value={mediaType}
-            onChange={(e) => {
-              setMediaType(e.target.value as "image" | "video");
-              setSelected([]);
-              setLoading(true);
-              loadMedia().then(() => setLoading(false));
-            }}
-          >
-            <option value="image">Imagens</option>
-            <option value="video">Vídeos</option>
-          </select>
-        </label>
+      {/* Botão engrenagem canto superior esquerdo - ESTILO DIRETO */}
+      <div
+        style={{
+          position: "fixed",
+          top: 10,
+          left: 10,
+          zIndex: 9999,
+          backgroundColor: "lime",
+          padding: "6px",
+          borderRadius: "6px",
+        }}
+      >
+        <button
+          onClick={() => {
+            console.log("🔧 Botão clicado");
+            setShowSettings((prev) => !prev);
+          }}
+          style={{
+            fontSize: "24px",
+            backgroundColor: "white",
+            color: "black",
+            border: "2px solid red",
+            borderRadius: "6px",
+            padding: "4px 12px",
+            cursor: "pointer",
+          }}
+        >
+          ⚙️
+        </button>
       </div>
 
+      {/* Painel de configurações */}
+      {showSettings && <LeadSettings config={leadConfig} setConfig={setLeadConfig} />}
+
+      {/* Tipo de mídia + recarregar */}
+      <div className="media-controls">
+        <div className="media-type-selector">
+          <label>
+            <span style={{ marginRight: "0.5rem" }}>⚙️ Tipo:</span>
+            <select
+              value={mediaType}
+              onChange={(e) => {
+                setMediaType(e.target.value as "image" | "video");
+                setSelected([]);
+                setLoading(true);
+                loadMedia().then(() => setLoading(false));
+              }}
+            >
+              <option value="image">Imagens</option>
+              <option value="video">Vídeos</option>
+            </select>
+          </label>
+        </div>
+
+        <button
+          className="reload-btn"
+          onClick={() => {
+            setSelected([]);
+            setLoading(true);
+            loadMedia().then(() => setLoading(false));
+          }}
+        >
+          🔄 Recarregar
+        </button>
+      </div>
+
+      {/* Botão QRCode */}
       {selected.length > 0 && (
         <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
-          📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}{selected.length > 1 ? "s" : ""}
+          📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}
+          {selected.length > 1 ? "s" : ""}
         </button>
       )}
 
+      {/* Galeria */}
       {loading ? (
-        <p className="text-center text-white">Carregando {mediaType === "video" ? "vídeos" : "imagens"}...</p>
+        <p className="text-center text-white">
+          Carregando {mediaType === "video" ? "vídeos" : "imagens"}...
+        </p>
       ) : mediaItems.length === 0 ? (
-        <p className="text-center text-white">Nenhum {mediaType === "video" ? "vídeo" : "imagem"} disponível.</p>
+        <p className="text-center text-white">
+          Nenhum {mediaType === "video" ? "vídeo" : "imagem"} disponível.
+        </p>
       ) : (
         <div className="image-grid">
           {mediaItems.map((item) => {
@@ -167,6 +231,7 @@ const GalleryScreen: React.FC = () => {
         </div>
       )}
 
+      {/* Modal QRCode */}
       {(selectedImageUrl || multipleImagesUrls) && (
         <QRCodeModal
           imageUrl={selectedImageUrl || ""}

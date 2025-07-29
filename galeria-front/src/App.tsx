@@ -10,13 +10,13 @@ import SplashScreen from "../pages/SplashScreen";
 import GalleryScreen from "../pages/GalleryScreen";
 import CapturaLead from "../public/CapturaLead";
 import MultiDownload from "../public/MultiDownload";
-import SingleDownload from "../public/SingleDownload"; // ✅ novo import
+import SingleDownload from "../public/SingleDownload";
 
 const ConditionalRoutes = () => {
-  const [tela, setTela] = useState<"splash" | "galeria">("splash");
+  // ⛏️ ALTERADO: começa direto na galeria
+  const [tela, setTela] = useState<"splash" | "galeria">("galeria");
   const location = useLocation();
 
-  // ✅ Adicione /download na lista
   const isDireto = ["/captura-lead", "/multi-download", "/download"].includes(
     location.pathname
   );
@@ -30,7 +30,7 @@ const ConditionalRoutes = () => {
       <Route path="/" element={<GalleryScreen />} />
       <Route path="/captura-lead" element={<CapturaLead />} />
       <Route path="/multi-download" element={<MultiDownload />} />
-      <Route path="/download" element={<SingleDownload />} /> {/* ✅ nova rota */}
+      <Route path="/download" element={<SingleDownload />} />
     </Routes>
   );
 };
