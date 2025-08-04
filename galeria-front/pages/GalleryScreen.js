@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { fetchMedia } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import "./GalleryScreen.css";
-const MAX_ITEMS = 30;
+const MAX_ITEMS = 50;
 const GalleryScreen = () => {
     const [mediaItems, setMediaItems] = useState([]);
     const [selected, setSelected] = useState([]);

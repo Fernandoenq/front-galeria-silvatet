@@ -6,6 +6,8 @@ export interface Lead {
   aceitou_lgpd: boolean;
 }
 
+
+
 // ✅ Usa variável de ambiente se houver, senão usa localhost
 const API_URL =
   import.meta.env.VITE_GALLERY_API_URL || "http://127.0.0.1:8000";

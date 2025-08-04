@@ -91,7 +91,21 @@ const CapturaLead: React.FC = () => {
         body: JSON.stringify(form),
       });
 
-      if (!response.ok) throw new Error("Erro ao salvar lead.");
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log("🔥 Erro vindo do back:", errorData);
+
+        if (
+          response.status === 400 &&
+          errorData.detail?.includes("CPF já foi utilizado")
+        ) {
+          alert("⚠️ Este CPF já foi utilizado hoje.");
+        } else {
+          alert("Erro ao enviar os dados. Tente novamente.");
+        }
+
+        return;
+      }
 
       navigate(redirect);
     } catch (err) {
@@ -136,7 +150,6 @@ const CapturaLead: React.FC = () => {
           value={form.telefone}
           onChange={handleChange}
         />
-
         <label className="checkbox-container">
           <input
             type="checkbox"
@@ -147,10 +160,8 @@ const CapturaLead: React.FC = () => {
           />
           Eu concordo com os termos da LGPD.
         </label>
-
         <button type="submit">Prosseguir para download</button>
       </form>
-
       <img src="/assets/logo2.png" alt="Logo PicBrand" className="logo" />
     </div>
   );

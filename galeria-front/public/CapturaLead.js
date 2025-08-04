@@ -92,7 +92,7 @@ const CapturaLead = () => {
             navigate(redirect);
         }
         catch (err) {
-            alert("Erro ao enviar os dados. Tente novamente.");
+            alert("Erro ao enviar os dados. CPF já foi utilizado hoje.");
             console.error("❌ Erro ao salvar lead:", err);
         }
     });
