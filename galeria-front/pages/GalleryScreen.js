@@ -11,8 +11,9 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { fetchMedia } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
+import LeadSettings from "./LeadSettings";
 import "./GalleryScreen.css";
-const MAX_ITEMS = 50;
+const MAX_ITEMS = 30;
 const GalleryScreen = () => {
     const [mediaItems, setMediaItems] = useState([]);
     const [selected, setSelected] = useState([]);
@@ -20,6 +21,14 @@ const GalleryScreen = () => {
     const [multipleImagesUrls, setMultipleImagesUrls] = useState(null);
     const [loading, setLoading] = useState(true);
     const [mediaType, setMediaType] = useState("image");
+    const [showSettings, setShowSettings] = useState(false);
+    const [leadConfig, setLeadConfig] = useState({
+        capturaLead: true,
+        campoNome: true,
+        campoEmail: true,
+        campoTelefone: true,
+        campoCPF: true,
+    });
     const areListsEqual = (list1, list2) => {
         if (list1.length !== list2.length)
             return false;
@@ -83,12 +92,35 @@ const GalleryScreen = () => {
             setSelectedImageUrl(null);
         }
     };
-    return (_jsxs("div", { className: "gallery-screen", children: [_jsx("div", { className: "media-type-selector", children: _jsxs("label", { children: [_jsx("span", { style: { marginRight: "0.5rem" }, children: "\u2699\uFE0F Tipo:" }), _jsxs("select", { value: mediaType, onChange: (e) => {
-                                setMediaType(e.target.value);
-                                setSelected([]);
-                                setLoading(true);
-                                loadMedia().then(() => setLoading(false));
-                            }, children: [_jsx("option", { value: "image", children: "Imagens" }), _jsx("option", { value: "video", children: "V\u00EDdeos" })] })] }) }), selected.length > 0 && (_jsxs("button", { className: "generate-qr-btn", onClick: handleDownloadQRCode, children: ["\uD83D\uDCC5 Gerar QRCode para ", selected.length, " ", mediaType === "video" ? "vídeo" : "imagem", selected.length > 1 ? "s" : ""] })), loading ? (_jsxs("p", { className: "text-center text-white", children: ["Carregando ", mediaType === "video" ? "vídeos" : "imagens", "..."] })) : mediaItems.length === 0 ? (_jsxs("p", { className: "text-center text-white", children: ["Nenhum ", mediaType === "video" ? "vídeo" : "imagem", " dispon\u00EDvel."] })) : (_jsx("div", { className: "image-grid", children: mediaItems.map((item) => {
+    return (_jsxs("div", { className: "gallery-screen", children: [_jsx("div", { style: {
+                    position: "fixed",
+                    top: 10,
+                    left: 10,
+                    zIndex: 9999,
+                    backgroundColor: "lime",
+                    padding: "6px",
+                    borderRadius: "6px",
+                }, children: _jsx("button", { onClick: () => {
+                        console.log("🔧 Botão clicado");
+                        setShowSettings((prev) => !prev);
+                    }, style: {
+                        fontSize: "24px",
+                        backgroundColor: "white",
+                        color: "black",
+                        border: "2px solid red",
+                        borderRadius: "6px",
+                        padding: "4px 12px",
+                        cursor: "pointer",
+                    }, children: "\u2699\uFE0F" }) }), showSettings && _jsx(LeadSettings, { config: leadConfig, setConfig: setLeadConfig }), _jsxs("div", { className: "media-controls", children: [_jsx("div", { className: "media-type-selector", children: _jsxs("label", { children: [_jsx("span", { style: { marginRight: "0.5rem" }, children: "\u2699\uFE0F Tipo:" }), _jsxs("select", { value: mediaType, onChange: (e) => {
+                                        setMediaType(e.target.value);
+                                        setSelected([]);
+                                        setLoading(true);
+                                        loadMedia().then(() => setLoading(false));
+                                    }, children: [_jsx("option", { value: "image", children: "Imagens" }), _jsx("option", { value: "video", children: "V\u00EDdeos" })] })] }) }), _jsx("button", { className: "reload-btn", onClick: () => {
+                            setSelected([]);
+                            setLoading(true);
+                            loadMedia().then(() => setLoading(false));
+                        }, children: "\uD83D\uDD04 Recarregar" })] }), selected.length > 0 && (_jsxs("button", { className: "generate-qr-btn", onClick: handleDownloadQRCode, children: ["\uD83D\uDCC5 Gerar QRCode para ", selected.length, " ", mediaType === "video" ? "vídeo" : "imagem", selected.length > 1 ? "s" : ""] })), loading ? (_jsxs("p", { className: "text-center text-white", children: ["Carregando ", mediaType === "video" ? "vídeos" : "imagens", "..."] })) : mediaItems.length === 0 ? (_jsxs("p", { className: "text-center text-white", children: ["Nenhum ", mediaType === "video" ? "vídeo" : "imagem", " dispon\u00EDvel."] })) : (_jsx("div", { className: "image-grid", children: mediaItems.map((item) => {
                     var _a;
                     const isSelected = selected.includes(item.nome);
                     return (_jsxs("label", { className: `image-container ${isSelected ? "selected" : ""}`, children: [_jsx("input", { type: "checkbox", checked: isSelected, onChange: () => handleSelect(item.nome), className: "select-checkbox" }), _jsx("div", { className: "foto-wrapper", children: mediaType === "image" ? (_jsx("img", { src: item.url, alt: `Imagem ${item.nome}`, className: "image-item", loading: "lazy", onError: (e) => {

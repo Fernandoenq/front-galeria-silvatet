@@ -54,6 +54,7 @@ const CapturaLead = () => {
         setForm((prev) => (Object.assign(Object.assign({}, prev), { [id]: type === "checkbox" ? checked : value })));
     };
     const handleSubmit = (e) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a;
         e.preventDefault();
         const { nome, cpf, email, telefone, aceitou_lgpd } = form;
         // Validações
@@ -87,12 +88,22 @@ const CapturaLead = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             });
-            if (!response.ok)
-                throw new Error("Erro ao salvar lead.");
+            if (!response.ok) {
+                const errorData = yield response.json();
+                console.log("🔥 Erro vindo do back:", errorData);
+                if (response.status === 400 &&
+                    ((_a = errorData.detail) === null || _a === void 0 ? void 0 : _a.includes("CPF já foi utilizado"))) {
+                    alert("⚠️ Este CPF já foi utilizado hoje.");
+                }
+                else {
+                    alert("Erro ao enviar os dados. Tente novamente.");
+                }
+                return;
+            }
             navigate(redirect);
         }
         catch (err) {
-            alert("Erro ao enviar os dados. CPF já foi utilizado hoje.");
+            alert("Erro ao enviar os dados. Tente novamente.");
             console.error("❌ Erro ao salvar lead:", err);
         }
     });
