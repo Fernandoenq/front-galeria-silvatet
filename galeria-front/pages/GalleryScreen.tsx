@@ -11,7 +11,8 @@ const GalleryScreen: React.FC = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -30,13 +31,14 @@ const GalleryScreen: React.FC = () => {
     );
   };
 
-  const loadMedia = async () => {
+  const loadMedia = async (opts?: { refreshing?: boolean }) => {
+    const refreshing = !!opts?.refreshing;
     try {
+      if (refreshing) setIsRefreshing(true);
       const result = await fetchMedia(mediaType);
       if (result.length > MAX_ITEMS) {
         result.splice(MAX_ITEMS);
       }
-
       const shouldUpdate = !areListsEqual(mediaItems, result);
       if (shouldUpdate) {
         setMediaItems(result);
@@ -46,6 +48,10 @@ const GalleryScreen: React.FC = () => {
       }
     } catch (error) {
       console.error("Erro ao carregar mídia:", error);
+    } finally {
+      if (initialLoading) setInitialLoading(false);
+      if (isRefreshing) setTimeout(() => setIsRefreshing(false), 120); // dá tempo da transição
+      if (!initialLoading && !isRefreshing) setIsRefreshing(false);
     }
   };
 
@@ -53,30 +59,28 @@ const GalleryScreen: React.FC = () => {
     let isMounted = true;
 
     const watchMedia = async () => {
+      // loop leve: atualiza só quando nada selecionado
       while (isMounted) {
         if (selected.length === 0) {
-          await loadMedia();
+          await loadMedia({ refreshing: true });
         }
         await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     };
 
-    setLoading(true);
+    // primeira carga
     loadMedia().then(() => {
-      setLoading(false);
       watchMedia();
     });
 
     return () => {
       isMounted = false;
     };
-  }, [selected, mediaType]);
+  }, [mediaType]); // ⇐ importante: não dependa de "selected" pra não reiniciar o loop
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
-      prev.includes(filename)
-        ? prev.filter((name) => name !== filename)
-        : [...prev, filename]
+      prev.includes(filename) ? prev.filter((name) => name !== filename) : [...prev, filename]
     );
   };
 
@@ -96,9 +100,29 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
+  const handleChangeMediaType = (value: "image" | "video") => {
+    setMediaType(value);
+    setSelected([]);
+    // não mostra tela preta; só um overlay curto
+    loadMedia({ refreshing: true });
+  };
+
+  const manualReload = () => {
+    setSelected([]);
+    loadMedia({ refreshing: true });
+  };
+
   return (
     <div className="gallery-screen">
-      {/* Botão engrenagem canto superior esquerdo - ESTILO DIRETO */}
+      {/* Overlay sutil de atualização */}
+      {(isRefreshing && !initialLoading) && (
+        <div className="refresh-overlay" aria-hidden>
+          <div className="spinner" />
+          <span>Atualizando…</span>
+        </div>
+      )}
+
+      {/* Botão engrenagem */}
       <div
         style={{
           position: "fixed",
@@ -111,10 +135,7 @@ const GalleryScreen: React.FC = () => {
         }}
       >
         <button
-          onClick={() => {
-            console.log("🔧 Botão clicado");
-            setShowSettings((prev) => !prev);
-          }}
+          onClick={() => setShowSettings((prev) => !prev)}
           style={{
             fontSize: "24px",
             backgroundColor: "white",
@@ -139,12 +160,7 @@ const GalleryScreen: React.FC = () => {
             <span style={{ marginRight: "0.5rem" }}>⚙️ Tipo:</span>
             <select
               value={mediaType}
-              onChange={(e) => {
-                setMediaType(e.target.value as "image" | "video");
-                setSelected([]);
-                setLoading(true);
-                loadMedia().then(() => setLoading(false));
-              }}
+              onChange={(e) => handleChangeMediaType(e.target.value as "image" | "video")}
             >
               <option value="image">Imagens</option>
               <option value="video">Vídeos</option>
@@ -152,43 +168,32 @@ const GalleryScreen: React.FC = () => {
           </label>
         </div>
 
-        <button
-          className="reload-btn"
-          onClick={() => {
-            setSelected([]);
-            setLoading(true);
-            loadMedia().then(() => setLoading(false));
-          }}
-        >
+        <button className="reload-btn" onClick={manualReload}>
           🔄 Recarregar
         </button>
       </div>
 
-      {/* Botão QRCode */}
-      {selected.length > 0 && (
-        <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
-          📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}
-          {selected.length > 1 ? "s" : ""}
-        </button>
-      )}
-
-      {/* Galeria */}
-      {loading ? (
-        <p className="text-center text-white">
-          Carregando {mediaType === "video" ? "vídeos" : "imagens"}...
-        </p>
+      {/* Conteúdo */}
+      {initialLoading ? (
+        <p className="text-center text-white">Carregando…</p>
       ) : mediaItems.length === 0 ? (
         <p className="text-center text-white">
           Nenhum {mediaType === "video" ? "vídeo" : "imagem"} disponível.
         </p>
       ) : (
-        <div className="image-grid">
+        <div className={`image-grid ${isRefreshing ? "is-refreshing" : ""}`}>
           {mediaItems.map((item) => {
             const isSelected = selected.includes(item.nome);
             return (
               <label
                 className={`image-container ${isSelected ? "selected" : ""}`}
                 key={item.id ?? item.nome}
+                onClick={(e) => {
+                  // permite clicar em qualquer área do card
+                  if ((e.target as HTMLElement).tagName !== "INPUT") {
+                    handleSelect(item.nome);
+                  }
+                }}
               >
                 <input
                   type="checkbox"
@@ -209,15 +214,15 @@ const GalleryScreen: React.FC = () => {
                           (e.target as HTMLImageElement).src = item.url;
                         }, 2000);
                       }}
-                      onLoad={() => {
-                        console.log("✅ Imagem carregada:", item.url);
+                      onLoad={(e) => {
+                        (e.target as HTMLImageElement).classList.add("loaded");
                       }}
                     />
                   ) : (
                     <video
                       src={item.url}
                       controls
-                      className="image-item"
+                      className="image-item video"
                       preload="metadata"
                     />
                   )}
@@ -229,6 +234,14 @@ const GalleryScreen: React.FC = () => {
             );
           })}
         </div>
+      )}
+
+      {/* Botão QRCode */}
+      {selected.length > 0 && (
+        <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
+          📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}
+          {selected.length > 1 ? "s" : ""}
+        </button>
       )}
 
       {/* Modal QRCode */}
