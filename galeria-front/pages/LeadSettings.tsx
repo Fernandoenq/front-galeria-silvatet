@@ -85,5 +85,5 @@ const LeadSettings: React.FC<LeadSettingsProps> = ({ config, setConfig }) => {
     </div>
   );
 };
-
+  
 export default LeadSettings;
