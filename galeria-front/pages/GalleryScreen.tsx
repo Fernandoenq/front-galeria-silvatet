@@ -58,33 +58,17 @@ const GalleryScreen: React.FC = () => {
     } finally {
       if (initialLoading) setInitialLoading(false);
       if (!initialLoading && refreshing) {
-        // overlay curto e suave
         setTimeout(() => setIsRefreshing(false), 150);
       }
     }
   };
 
-  // primeira carga + polling (pausa se há seleção)
+  // primeira carga (sem polling automático)
   useEffect(() => {
-    let cancelled = false;
-
     (async () => {
-      await loadMedia(); // primeira carga (mostra "Carregando..." só aqui)
+      await loadMedia();
     })();
-
-    const id = setInterval(() => {
-      if (cancelled) return;
-      if (selected.length === 0) {
-        loadMedia({ refreshing: true });
-      }
-    }, 3000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-    // reinicia polling se tipo de mídia muda; observa apenas o comprimento de selected
-  }, [mediaType, selected.length]);
+  }, [mediaType]);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -111,7 +95,7 @@ const GalleryScreen: React.FC = () => {
   const handleChangeMediaType = async (value: "image" | "video") => {
     setMediaType(value);
     setSelected([]);
-    await loadMedia({ refreshing: true }); // sem tela preta; apenas overlay
+    await loadMedia({ refreshing: true });
   };
 
   const manualReload = async () => {
@@ -126,7 +110,6 @@ const GalleryScreen: React.FC = () => {
 
   return (
     <div className="gallery-screen">
-      {/* Overlay de refresh (mantém a grid visível atrás) */}
       {isRefreshing && !initialLoading && (
         <div className="refresh-overlay" aria-hidden>
           <div className="spinner" />
@@ -162,7 +145,6 @@ const GalleryScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Painel de configurações */}
       {showSettings && <LeadSettings config={leadConfig} setConfig={setLeadConfig} />}
 
       {/* Tipo de mídia + recarregar */}
@@ -199,7 +181,6 @@ const GalleryScreen: React.FC = () => {
                 className={`image-container ${isSelected ? "selected" : ""}`}
                 key={item.id ?? item.nome}
                 onClick={(e) => {
-                  // seleciona clicando em qualquer lugar do card
                   if ((e.target as HTMLElement).tagName !== "INPUT") {
                     handleSelect(item.nome);
                   }
@@ -222,9 +203,9 @@ const GalleryScreen: React.FC = () => {
                         const el = e.currentTarget as HTMLImageElement;
                         if (!el.dataset.retry) {
                           el.dataset.retry = "1";
-                          el.src = busted(item.url); // tenta recarregar sem cache
+                          el.src = busted(item.url);
                         } else {
-                          el.src = "/placeholder.png"; // fallback visual
+                          el.src = "/placeholder.png";
                         }
                       }}
                       onLoad={(e) => {
@@ -250,7 +231,6 @@ const GalleryScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Botão QRCode */}
       {selected.length > 0 && (
         <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
           📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}
@@ -258,7 +238,6 @@ const GalleryScreen: React.FC = () => {
         </button>
       )}
 
-      {/* Modal QRCode */}
       {(selectedImageUrl || multipleImagesUrls) && (
         <QRCodeModal
           imageUrl={selectedImageUrl || ""}
