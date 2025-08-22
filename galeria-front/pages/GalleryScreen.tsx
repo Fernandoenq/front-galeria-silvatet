@@ -1,5 +1,5 @@
 // src/screens/GalleryScreen.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { fetchMedia, ImageItem } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import LeadSettings, { LeadConfig } from "./LeadSettings";
@@ -13,7 +13,7 @@ const GalleryScreen: React.FC = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
 
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading] = useState(false); // não usamos loading inicial automático
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [showSettings, setShowSettings] = useState(false);
@@ -39,7 +39,7 @@ const GalleryScreen: React.FC = () => {
   const loadMedia = async (opts?: { refreshing?: boolean }) => {
     const refreshing = !!opts?.refreshing;
     try {
-      if (!initialLoading && refreshing) setIsRefreshing(true);
+      if (refreshing) setIsRefreshing(true);
 
       const result = await fetchMedia(mediaType);
       if (result.length > MAX_ITEMS) result.splice(MAX_ITEMS);
@@ -56,18 +56,12 @@ const GalleryScreen: React.FC = () => {
     } catch (error) {
       console.error("Erro ao carregar mídia:", error);
     } finally {
-      if (initialLoading) setInitialLoading(false);
-      if (!initialLoading && refreshing) {
-        setTimeout(() => setIsRefreshing(false), 150);
-      }
+      if (refreshing) setTimeout(() => setIsRefreshing(false), 150);
     }
   };
 
-  // primeira carga única (sem polling e sem reload automático)
-  useEffect(() => {
-    loadMedia();
-    // [] vazio -> executa apenas 1x
-  }, []);
+  // 🔴 REMOVIDO: nada de carregamento automático ao montar
+  // useEffect(() => { loadMedia(); }, []);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -91,10 +85,11 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
-  const handleChangeMediaType = async (value: "image" | "video") => {
+  // ✅ Mudar o tipo NÃO busca nada; apenas limpa seleção e grade
+  const handleChangeMediaType = (value: "image" | "video") => {
     setMediaType(value);
     setSelected([]);
-    await loadMedia({ refreshing: true });
+    setMediaItems([]); // opcional: mostra vazio até o usuário clicar em Recarregar
   };
 
   const manualReload = async () => {
@@ -109,7 +104,7 @@ const GalleryScreen: React.FC = () => {
 
   return (
     <div className="gallery-screen">
-      {isRefreshing && !initialLoading && (
+      {isRefreshing && (
         <div className="refresh-overlay" aria-hidden>
           <div className="spinner" />
           <span>Atualizando…</span>
@@ -168,9 +163,15 @@ const GalleryScreen: React.FC = () => {
 
       {/* Conteúdo */}
       {initialLoading ? (
+        // nunca entra aqui porque não carregamos automaticamente; pode remover se quiser
         <p className="text-center text-white">Carregando…</p>
       ) : mediaItems.length === 0 ? (
-        <p className="text-center text-white">{emptyText}</p>
+        <div className="text-center text-white">
+          <p>{emptyText}</p>
+          <p style={{ opacity: 0.8, fontSize: "0.95rem", marginTop: "0.25rem" }}>
+            Clique em <strong>🔄 Recarregar</strong> para buscar {mediaType === "video" ? "vídeos" : "imagens"}.
+          </p>
+        </div>
       ) : (
         <div className={`image-grid ${isRefreshing ? "is-refreshing" : ""}`}>
           {mediaItems.map((item) => {
@@ -230,6 +231,7 @@ const GalleryScreen: React.FC = () => {
         </div>
       )}
 
+      {/* Botão QRCode */}
       {selected.length > 0 && (
         <button className="generate-qr-btn" onClick={handleDownloadQRCode}>
           📅 Gerar QRCode para {selected.length} {mediaType === "video" ? "vídeo" : "imagem"}
@@ -237,6 +239,7 @@ const GalleryScreen: React.FC = () => {
         </button>
       )}
 
+      {/* Modal QRCode */}
       {(selectedImageUrl || multipleImagesUrls) && (
         <QRCodeModal
           imageUrl={selectedImageUrl || ""}
