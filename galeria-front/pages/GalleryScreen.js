@@ -8,18 +8,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchMedia } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import LeadSettings from "./LeadSettings";
 import "./GalleryScreen.css";
+
 const MAX_ITEMS = 30;
+
 const GalleryScreen = () => {
     const [mediaItems, setMediaItems] = useState([]);
     const [selected, setSelected] = useState([]);
     const [selectedImageUrl, setSelectedImageUrl] = useState(null);
     const [multipleImagesUrls, setMultipleImagesUrls] = useState(null);
-    const [loading, setLoading] = useState(true);
+
+    // começa falso; nada carrega sozinho
+    const [loading, setLoading] = useState(false);
+
     const [mediaType, setMediaType] = useState("image");
     const [showSettings, setShowSettings] = useState(false);
     const [leadConfig, setLeadConfig] = useState({
@@ -29,11 +34,12 @@ const GalleryScreen = () => {
         campoTelefone: true,
         campoCPF: true,
     });
+
     const areListsEqual = (list1, list2) => {
-        if (list1.length !== list2.length)
-            return false;
+        if (list1.length !== list2.length) return false;
         return list1.every((item, idx) => item.nome === list2[idx].nome && item.url === list2[idx].url);
     };
+
     const loadMedia = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const result = yield fetchMedia(mediaType);
@@ -52,30 +58,13 @@ const GalleryScreen = () => {
             console.error("Erro ao carregar mídia:", error);
         }
     });
-    useEffect(() => {
-        let isMounted = true;
-        const watchMedia = () => __awaiter(void 0, void 0, void 0, function* () {
-            while (isMounted) {
-                if (selected.length === 0) {
-                    yield loadMedia();
-                }
-                yield new Promise((resolve) => setTimeout(resolve, 3000));
-            }
-        });
-        setLoading(true);
-        loadMedia().then(() => {
-            setLoading(false);
-            watchMedia();
-        });
-        return () => {
-            isMounted = false;
-        };
-    }, [selected, mediaType]);
+
     const handleSelect = (filename) => {
         setSelected((prev) => prev.includes(filename)
             ? prev.filter((name) => name !== filename)
             : [...prev, filename]);
     };
+
     const handleDownloadQRCode = () => {
         if (selected.length === 1) {
             const item = mediaItems.find((i) => i.nome === selected[0]);
@@ -92,48 +81,99 @@ const GalleryScreen = () => {
             setSelectedImageUrl(null);
         }
     };
-    return (_jsxs("div", { className: "gallery-screen", children: [_jsx("div", { style: {
-                    position: "fixed",
-                    top: 10,
-                    left: 10,
-                    zIndex: 9999,
-                    backgroundColor: "lime",
-                    padding: "6px",
+
+    return (_jsxs("div", { className: "gallery-screen", children: [
+        _jsx("div", { style: {
+                position: "fixed",
+                top: 10,
+                left: 10,
+                zIndex: 9999,
+                backgroundColor: "lime",
+                padding: "6px",
+                borderRadius: "6px",
+            }, children: _jsx("button", { onClick: () => {
+                    setShowSettings((prev) => !prev);
+                }, style: {
+                    fontSize: "24px",
+                    backgroundColor: "white",
+                    color: "black",
+                    border: "2px solid red",
                     borderRadius: "6px",
-                }, children: _jsx("button", { onClick: () => {
-                        console.log("🔧 Botão clicado");
-                        setShowSettings((prev) => !prev);
-                    }, style: {
-                        fontSize: "24px",
-                        backgroundColor: "white",
-                        color: "black",
-                        border: "2px solid red",
-                        borderRadius: "6px",
-                        padding: "4px 12px",
-                        cursor: "pointer",
-                    }, children: "\u2699\uFE0F" }) }), showSettings && _jsx(LeadSettings, { config: leadConfig, setConfig: setLeadConfig }), _jsxs("div", { className: "media-controls", children: [_jsx("div", { className: "media-type-selector", children: _jsxs("label", { children: [_jsx("span", { style: { marginRight: "0.5rem" }, children: "\u2699\uFE0F Tipo:" }), _jsxs("select", { value: mediaType, onChange: (e) => {
-                                        setMediaType(e.target.value);
-                                        setSelected([]);
-                                        setLoading(true);
-                                        loadMedia().then(() => setLoading(false));
-                                    }, children: [_jsx("option", { value: "image", children: "Imagens" }), _jsx("option", { value: "video", children: "V\u00EDdeos" })] })] }) }), _jsx("button", { className: "reload-btn", onClick: () => {
-                            setSelected([]);
-                            setLoading(true);
-                            loadMedia().then(() => setLoading(false));
-                        }, children: "\uD83D\uDD04 Recarregar" })] }), selected.length > 0 && (_jsxs("button", { className: "generate-qr-btn", onClick: handleDownloadQRCode, children: ["\uD83D\uDCC5 Gerar QRCode para ", selected.length, " ", mediaType === "video" ? "vídeo" : "imagem", selected.length > 1 ? "s" : ""] })), loading ? (_jsxs("p", { className: "text-center text-white", children: ["Carregando ", mediaType === "video" ? "vídeos" : "imagens", "..."] })) : mediaItems.length === 0 ? (_jsxs("p", { className: "text-center text-white", children: ["Nenhum ", mediaType === "video" ? "vídeo" : "imagem", " dispon\u00EDvel."] })) : (_jsx("div", { className: "image-grid", children: mediaItems.map((item) => {
-                    var _a;
-                    const isSelected = selected.includes(item.nome);
-                    return (_jsxs("label", { className: `image-container ${isSelected ? "selected" : ""}`, children: [_jsx("input", { type: "checkbox", checked: isSelected, onChange: () => handleSelect(item.nome), className: "select-checkbox" }), _jsx("div", { className: "foto-wrapper", children: mediaType === "image" ? (_jsx("img", { src: item.url, alt: `Imagem ${item.nome}`, className: "image-item", loading: "lazy", onError: (e) => {
-                                        console.warn("⚠️ Erro ao carregar imagem:", item.url);
-                                        setTimeout(() => {
-                                            e.target.src = item.url;
-                                        }, 2000);
-                                    }, onLoad: () => {
-                                        console.log("✅ Imagem carregada:", item.url);
-                                    } })) : (_jsx("video", { src: item.url, controls: true, className: "image-item", preload: "metadata" })) }), _jsxs("p", { className: "image-name", children: [mediaType === "video" ? "Vídeo" : "Imagem", " ", item.nome] })] }, (_a = item.id) !== null && _a !== void 0 ? _a : item.nome));
-                }) })), (selectedImageUrl || multipleImagesUrls) && (_jsx(QRCodeModal, { imageUrl: selectedImageUrl || "", multipleImages: multipleImagesUrls || undefined, onClose: () => {
-                    setSelectedImageUrl(null);
-                    setMultipleImagesUrls(null);
-                } }))] }));
+                    padding: "4px 12px",
+                    cursor: "pointer",
+                }, children: "\u2699\uFE0F" }) }),
+        showSettings && _jsx(LeadSettings, { config: leadConfig, setConfig: setLeadConfig }),
+
+        _jsxs("div", { className: "media-controls", children: [
+            _jsx("div", { className: "media-type-selector", children: _jsxs("label", { children: [
+                        _jsx("span", { style: { marginRight: "0.5rem" }, children: "\u2699\uFE0F Tipo:" }),
+                        _jsxs("select", { value: mediaType, onChange: (e) => {
+                                // trocar tipo não recarrega nada automaticamente
+                                setMediaType(e.target.value);
+                                setSelected([]);
+                                setMediaItems([]); // limpa a grade até o usuário clicar em Recarregar
+                            }, children: [
+                                _jsx("option", { value: "image", children: "Imagens" }),
+                                _jsx("option", { value: "video", children: "V\u00EDdeos" })
+                            ] })
+                    ] }) }),
+            _jsx("button", { className: "reload-btn", onClick: () => {
+                    setSelected([]);
+                    setLoading(true);
+                    loadMedia().finally(() => setLoading(false));
+                }, children: "\uD83D\uDD04 Recarregar" })
+        ] }),
+
+        selected.length > 0 && (_jsxs("button", { className: "generate-qr-btn", onClick: handleDownloadQRCode, children: [
+                "\uD83D\uDCC5 Gerar QRCode para ",
+                selected.length,
+                " ",
+                mediaType === "video" ? "vídeo" : "imagem",
+                selected.length > 1 ? "s" : ""
+            ] })),
+
+        loading ? (_jsxs("p", { className: "text-center text-white", children: [
+                "Carregando ",
+                mediaType === "video" ? "vídeos" : "imagens",
+                "..."
+            ] })) : mediaItems.length === 0 ? (_jsxs("div", { className: "text-center text-white", children: [
+                _jsxs("p", { children: [
+                        "Nenhum ",
+                        mediaType === "video" ? "vídeo" : "imagem",
+                        " disponível."
+                    ] }),
+                _jsxs("p", { style: { opacity: 0.8, fontSize: "0.95rem", marginTop: "0.25rem" }, children: [
+                        "Clique em ",
+                        _jsx("strong", { children: "\uD83D\uDD04 Recarregar" }),
+                        " para buscar ",
+                        mediaType === "video" ? "vídeos" : "imagens",
+                        "."
+                    ] })
+            ] })) : (_jsx("div", { className: "image-grid", children: mediaItems.map((item) => {
+                var _a;
+                const isSelected = selected.includes(item.nome);
+                return (_jsxs("label", { className: `image-container ${isSelected ? "selected" : ""}`, children: [
+                        _jsx("input", { type: "checkbox", checked: isSelected, onChange: () => handleSelect(item.nome), className: "select-checkbox" }),
+                        _jsx("div", { className: "foto-wrapper", children: mediaType === "image" ? (_jsx("img", { src: item.url, alt: `Imagem ${item.nome}`, className: "image-item", loading: "lazy", onError: (e) => {
+                                    // tenta recarregar a própria URL após um tempo (sem bust aqui, mantendo seu padrão)
+                                    setTimeout(() => {
+                                        e.target.src = item.url;
+                                    }, 2000);
+                                }, onLoad: () => {
+                                    // opcional: log
+                                } })) : (_jsx("video", { src: item.url, controls: true, className: "image-item", preload: "metadata" })) }),
+                        _jsxs("p", { className: "image-name", children: [
+                                mediaType === "video" ? "Vídeo" : "Imagem",
+                                " ",
+                                item.nome
+                            ] })
+                    ] }, (_a = item.id) !== null && _a !== void 0 ? _a : item.nome));
+            }) })),
+
+        (selectedImageUrl || multipleImagesUrls) && (_jsx(QRCodeModal, { imageUrl: selectedImageUrl || "", multipleImages: multipleImagesUrls || undefined, onClose: () => {
+                setSelectedImageUrl(null);
+                setMultipleImagesUrls(null);
+            } }))
+    ] }));
 };
 export default GalleryScreen;

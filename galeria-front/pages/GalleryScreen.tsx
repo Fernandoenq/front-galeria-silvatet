@@ -63,12 +63,11 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
-  // primeira carga (sem polling automático)
+  // primeira carga única (sem polling e sem reload automático)
   useEffect(() => {
-    (async () => {
-      await loadMedia();
-    })();
-  }, [mediaType]);
+    loadMedia();
+    // [] vazio -> executa apenas 1x
+  }, []);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
