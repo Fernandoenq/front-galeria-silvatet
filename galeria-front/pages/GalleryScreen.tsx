@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// src/screens/GalleryScreen.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import { fetchMedia, ImageItem } from "../services/s3Service";
 import QRCodeModal from "../components/QRCodeModal";
 import LeadSettings, { LeadConfig } from "./LeadSettings";
@@ -11,6 +12,7 @@ const GalleryScreen: React.FC = () => {
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [multipleImagesUrls, setMultipleImagesUrls] = useState<string[] | null>(null);
+
   const [initialLoading, setInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
@@ -26,57 +28,63 @@ const GalleryScreen: React.FC = () => {
 
   const areListsEqual = (list1: ImageItem[], list2: ImageItem[]) => {
     if (list1.length !== list2.length) return false;
-    return list1.every(
-      (item, idx) => item.nome === list2[idx].nome && item.url === list2[idx].url
-    );
+    for (let i = 0; i < list1.length; i++) {
+      if (list1[i].nome !== list2[i].nome || list1[i].url !== list2[i].url) return false;
+    }
+    return true;
   };
+
+  const busted = (url: string) => `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
 
   const loadMedia = async (opts?: { refreshing?: boolean }) => {
     const refreshing = !!opts?.refreshing;
     try {
-      if (refreshing) setIsRefreshing(true);
+      if (!initialLoading && refreshing) setIsRefreshing(true);
+
       const result = await fetchMedia(mediaType);
-      if (result.length > MAX_ITEMS) {
-        result.splice(MAX_ITEMS);
-      }
+      if (result.length > MAX_ITEMS) result.splice(MAX_ITEMS);
+
       const shouldUpdate = !areListsEqual(mediaItems, result);
       if (shouldUpdate) {
         setMediaItems(result);
+
+        // mantém seleção apenas do que ainda existe
         const availableNames = result.map((item) => item.nome);
         const stillSelected = selected.filter((name) => availableNames.includes(name));
-        setSelected(stillSelected);
+        if (stillSelected.length !== selected.length) setSelected(stillSelected);
       }
     } catch (error) {
       console.error("Erro ao carregar mídia:", error);
     } finally {
       if (initialLoading) setInitialLoading(false);
-      if (isRefreshing) setTimeout(() => setIsRefreshing(false), 120); // dá tempo da transição
-      if (!initialLoading && !isRefreshing) setIsRefreshing(false);
+      if (!initialLoading && refreshing) {
+        // overlay curto e suave
+        setTimeout(() => setIsRefreshing(false), 150);
+      }
     }
   };
 
+  // primeira carga + polling (pausa se há seleção)
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
-    const watchMedia = async () => {
-      // loop leve: atualiza só quando nada selecionado
-      while (isMounted) {
-        if (selected.length === 0) {
-          await loadMedia({ refreshing: true });
-        }
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+    (async () => {
+      await loadMedia(); // primeira carga (mostra "Carregando..." só aqui)
+    })();
+
+    const id = setInterval(() => {
+      if (cancelled) return;
+      if (selected.length === 0) {
+        loadMedia({ refreshing: true });
       }
-    };
-
-    // primeira carga
-    loadMedia().then(() => {
-      watchMedia();
-    });
+    }, 3000);
 
     return () => {
-      isMounted = false;
+      cancelled = true;
+      clearInterval(id);
     };
-  }, [mediaType]); // ⇐ importante: não dependa de "selected" pra não reiniciar o loop
+    // reinicia polling se tipo de mídia muda; observa apenas o comprimento de selected
+  }, [mediaType, selected.length]);
 
   const handleSelect = (filename: string) => {
     setSelected((prev) =>
@@ -100,22 +108,26 @@ const GalleryScreen: React.FC = () => {
     }
   };
 
-  const handleChangeMediaType = (value: "image" | "video") => {
+  const handleChangeMediaType = async (value: "image" | "video") => {
     setMediaType(value);
     setSelected([]);
-    // não mostra tela preta; só um overlay curto
-    loadMedia({ refreshing: true });
+    await loadMedia({ refreshing: true }); // sem tela preta; apenas overlay
   };
 
-  const manualReload = () => {
+  const manualReload = async () => {
     setSelected([]);
-    loadMedia({ refreshing: true });
+    await loadMedia({ refreshing: true });
   };
+
+  const emptyText = useMemo(
+    () => `Nenhum ${mediaType === "video" ? "vídeo" : "imagem"} disponível.`,
+    [mediaType]
+  );
 
   return (
     <div className="gallery-screen">
-      {/* Overlay sutil de atualização */}
-      {(isRefreshing && !initialLoading) && (
+      {/* Overlay de refresh (mantém a grid visível atrás) */}
+      {isRefreshing && !initialLoading && (
         <div className="refresh-overlay" aria-hidden>
           <div className="spinner" />
           <span>Atualizando…</span>
@@ -177,9 +189,7 @@ const GalleryScreen: React.FC = () => {
       {initialLoading ? (
         <p className="text-center text-white">Carregando…</p>
       ) : mediaItems.length === 0 ? (
-        <p className="text-center text-white">
-          Nenhum {mediaType === "video" ? "vídeo" : "imagem"} disponível.
-        </p>
+        <p className="text-center text-white">{emptyText}</p>
       ) : (
         <div className={`image-grid ${isRefreshing ? "is-refreshing" : ""}`}>
           {mediaItems.map((item) => {
@@ -189,7 +199,7 @@ const GalleryScreen: React.FC = () => {
                 className={`image-container ${isSelected ? "selected" : ""}`}
                 key={item.id ?? item.nome}
                 onClick={(e) => {
-                  // permite clicar em qualquer área do card
+                  // seleciona clicando em qualquer lugar do card
                   if ((e.target as HTMLElement).tagName !== "INPUT") {
                     handleSelect(item.nome);
                   }
@@ -209,13 +219,16 @@ const GalleryScreen: React.FC = () => {
                       className="image-item"
                       loading="lazy"
                       onError={(e) => {
-                        console.warn("⚠️ Erro ao carregar imagem:", item.url);
-                        setTimeout(() => {
-                          (e.target as HTMLImageElement).src = item.url;
-                        }, 2000);
+                        const el = e.currentTarget as HTMLImageElement;
+                        if (!el.dataset.retry) {
+                          el.dataset.retry = "1";
+                          el.src = busted(item.url); // tenta recarregar sem cache
+                        } else {
+                          el.src = "/placeholder.png"; // fallback visual
+                        }
                       }}
                       onLoad={(e) => {
-                        (e.target as HTMLImageElement).classList.add("loaded");
+                        (e.currentTarget as HTMLImageElement).classList.add("loaded");
                       }}
                     />
                   ) : (
@@ -224,6 +237,7 @@ const GalleryScreen: React.FC = () => {
                       controls
                       className="image-item video"
                       preload="metadata"
+                      poster="/video-poster.png"
                     />
                   )}
                 </div>
